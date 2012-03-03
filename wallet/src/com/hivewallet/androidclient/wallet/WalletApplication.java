@@ -71,7 +71,7 @@ import com.hivewallet.androidclient.wallet.util.AppPlatformDBHelper;
 import com.hivewallet.androidclient.wallet.util.CrashReporter;
 import com.hivewallet.androidclient.wallet.util.Io;
 import com.hivewallet.androidclient.wallet.util.LinuxSecureRandom;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

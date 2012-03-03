@@ -38,7 +38,7 @@ import com.google.bitcoin.core.ECKey;
 
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.util.ViewPagerTabs;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

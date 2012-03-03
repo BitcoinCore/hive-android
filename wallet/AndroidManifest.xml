@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools"
-	package="com.hivewallet.androidclient.wallet_test"
+	package="com.hivewallet.androidclient.wallet"
 	android:installLocation="internalOnly"
 	android:versionCode="21"
-	android:versionName="0.4.2.3.52-test" >
+	android:versionName="0.4.2.3.52" >
 
 	<uses-sdk
 		android:minSdkVersion="14"
@@ -210,15 +210,15 @@
 
 		<provider
 			android:name="com.hivewallet.androidclient.wallet.AddressBookProvider"
-			android:authorities="com.hivewallet.androidclient.wallet_test.address_book"
+			android:authorities="com.hivewallet.androidclient.wallet.address_book"
 			android:exported="false" />
 		<provider
 			android:name="com.hivewallet.androidclient.wallet.ExchangeRatesProvider"
-			android:authorities="com.hivewallet.androidclient.wallet_test.exchange_rates"
+			android:authorities="com.hivewallet.androidclient.wallet.exchange_rates"
 			android:exported="false" />
 		<provider
 			android:name="android.support.v4.content.FileProvider"
-			android:authorities="com.hivewallet.androidclient.wallet_test.fileprovider"
+			android:authorities="com.hivewallet.androidclient.wallet.fileprovider"
 			android:grantUriPermissions="true"
 			android:exported="false">
 			<meta-data

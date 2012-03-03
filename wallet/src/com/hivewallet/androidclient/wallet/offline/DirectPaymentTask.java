@@ -42,7 +42,7 @@ import android.os.Looper;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.util.Bluetooth;
 import com.hivewallet.androidclient.wallet.util.PaymentProtocol;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

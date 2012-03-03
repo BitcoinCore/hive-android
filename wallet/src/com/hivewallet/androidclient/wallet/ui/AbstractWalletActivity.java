@@ -30,7 +30,7 @@ import android.widget.Toast;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 
 import com.hivewallet.androidclient.wallet.WalletApplication;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

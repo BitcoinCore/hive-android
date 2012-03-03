@@ -74,7 +74,7 @@ import com.hivewallet.androidclient.wallet.util.AppPlatformDBHelper;
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
 import com.hivewallet.androidclient.wallet.util.StringPlus;
 import com.hivewallet.androidclient.wallet.util.StringPlusRequest;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 @SuppressLint("SetJavaScriptEnabled")
 public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>

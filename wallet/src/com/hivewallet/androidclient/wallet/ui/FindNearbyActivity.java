@@ -16,7 +16,7 @@ import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.FindNearbyContact;
 import com.hivewallet.androidclient.wallet.util.FindNearbyBluetoothWorker;
 import com.hivewallet.androidclient.wallet.util.FindNearbyGPSWorker;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;

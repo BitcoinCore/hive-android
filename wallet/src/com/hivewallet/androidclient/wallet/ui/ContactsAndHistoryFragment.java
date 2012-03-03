@@ -1,7 +1,7 @@
 package com.hivewallet.androidclient.wallet.ui;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;

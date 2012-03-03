@@ -22,7 +22,7 @@ import android.widget.ListView;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.AppPlatformDBHelper;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 import com.squareup.picasso.Picasso;
 
 @SuppressLint("SetJavaScriptEnabled")

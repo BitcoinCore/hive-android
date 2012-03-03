@@ -56,7 +56,7 @@ import com.google.bitcoin.core.VersionMessage;
 import com.hivewallet.androidclient.wallet.service.BlockchainService;
 import com.hivewallet.androidclient.wallet.service.BlockchainServiceImpl;
 import com.hivewallet.androidclient.wallet.util.WholeStringBuilder;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

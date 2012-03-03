@@ -12,7 +12,7 @@ import com.hivewallet.androidclient.wallet.AddressBookProvider.AddressBookEntry;
 import com.hivewallet.androidclient.wallet.data.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.send.SendCoinsActivity;
 import com.hivewallet.androidclient.wallet.util.FindNearbyContact;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 import com.squareup.picasso.Picasso;
 
 import android.content.Context;

@@ -12,7 +12,7 @@ import com.hivewallet.androidclient.permissionpack.LocationService;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.WalletApplication;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 import com.squareup.picasso.Picasso;
 
 import android.app.Activity;

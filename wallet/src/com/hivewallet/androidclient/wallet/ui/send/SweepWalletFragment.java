@@ -58,7 +58,7 @@ import com.hivewallet.androidclient.wallet.ui.ProgressDialogFragment;
 import com.hivewallet.androidclient.wallet.ui.ScanActivity;
 import com.hivewallet.androidclient.wallet.ui.TransactionsListAdapter;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Maximilian Keller

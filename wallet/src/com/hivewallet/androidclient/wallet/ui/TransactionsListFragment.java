@@ -82,7 +82,7 @@ import com.hivewallet.androidclient.wallet.util.Nfc;
 import com.hivewallet.androidclient.wallet.util.Qr;
 import com.hivewallet.androidclient.wallet.util.ThrottlingWalletChangeListener;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

@@ -41,7 +41,7 @@ import com.google.bitcoin.core.Wallet;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

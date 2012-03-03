@@ -52,7 +52,7 @@ import com.google.common.io.BaseEncoding;
 
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.util.Io;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

@@ -58,7 +58,7 @@ import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.BitmapFragment;
 import com.hivewallet.androidclient.wallet.util.Qr;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

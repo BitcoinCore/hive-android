@@ -30,7 +30,7 @@ import com.actionbarsherlock.view.MenuItem;
 import com.hivewallet.androidclient.wallet.data.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.AbstractBindServiceActivity;
 import com.hivewallet.androidclient.wallet.ui.HelpDialogFragment;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

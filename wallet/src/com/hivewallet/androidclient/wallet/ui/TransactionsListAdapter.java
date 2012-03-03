@@ -56,7 +56,7 @@ import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 import com.hivewallet.androidclient.wallet.util.CircularProgressView;
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 import com.squareup.picasso.Picasso;
 
 /**

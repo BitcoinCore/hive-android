@@ -8,7 +8,7 @@ import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.BitmapFragment;
 import com.hivewallet.androidclient.wallet.util.Nfc;
 import com.hivewallet.androidclient.wallet.util.Qr;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 import android.app.Activity;
 import android.content.Context;

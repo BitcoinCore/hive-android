@@ -35,7 +35,7 @@ import android.view.View;
 
 import com.google.zxing.ResultPoint;
 
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

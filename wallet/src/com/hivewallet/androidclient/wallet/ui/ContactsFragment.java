@@ -3,7 +3,7 @@ package com.hivewallet.androidclient.wallet.ui;
 import com.actionbarsherlock.app.SherlockFragment;
 import com.google.bitcoin.core.AddressFormatException;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 import com.squareup.picasso.Picasso;
 
 import android.app.Activity;

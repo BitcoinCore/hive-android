@@ -27,7 +27,7 @@ import com.actionbarsherlock.app.ActionBar;
 import com.google.bitcoin.core.ECKey;
 
 import com.hivewallet.androidclient.wallet.ui.AbstractBindServiceActivity;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

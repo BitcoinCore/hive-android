@@ -3,7 +3,7 @@ package com.hivewallet.androidclient.wallet.ui;
 import com.google.bitcoin.core.Transaction;
 import com.hivewallet.androidclient.wallet.data.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.InputParser.StringInputParser;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 import android.app.Activity;
 import android.app.Dialog;

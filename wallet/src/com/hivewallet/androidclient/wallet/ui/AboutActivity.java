@@ -30,7 +30,7 @@ import com.google.bitcoin.core.VersionMessage;
 
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.WalletApplication;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

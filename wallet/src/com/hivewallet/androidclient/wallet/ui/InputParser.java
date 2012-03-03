@@ -50,7 +50,7 @@ import com.hivewallet.androidclient.wallet.data.PaymentIntent;
 import com.hivewallet.androidclient.wallet.util.Io;
 import com.hivewallet.androidclient.wallet.util.PaymentProtocol;
 import com.hivewallet.androidclient.wallet.util.Qr;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach

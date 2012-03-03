@@ -27,7 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import com.hivewallet.androidclient.wallet.ui.TransactionsListFragment.Direction;
 import com.hivewallet.androidclient.wallet.util.ViewPagerTabs;
-import com.hivewallet.androidclient.wallet_test.R;
+import com.hivewallet.androidclient.wallet.R;
 
 /**
  * @author Andreas Schildbach
