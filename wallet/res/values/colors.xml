@@ -23,4 +23,7 @@
 	<color name="scan_result_view">#b0000000</color>
 	<color name="scan_result_dots">#c099cc00</color>
 
+	<!-- decoration -->
+	<color name="section_header_color">#31b6e7</color>
+
 </resources>
