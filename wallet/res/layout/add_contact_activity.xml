@@ -1,0 +1,107 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	style="@style/ActivityPadding"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical" >
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal" >
+
+		<ImageView
+			style="@style/LargeButton"
+			android:contentDescription="@string/contact_photo"
+			android:src="@drawable/ic_contact_picture" />
+
+		<AutoCompleteTextView
+			android:id="@+id/actv_contact_name"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_vertical"
+			android:layout_weight="1"
+			android:hint="@string/name"
+			android:inputType="textPersonName" />
+	</LinearLayout>
+
+	<RadioGroup
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+		android:paddingTop="8dp" >
+
+		<RadioButton
+			android:id="@+id/rb_connect_via_hive"
+			style="@style/RadioButtonSection"
+			android:checked="true"
+			android:text="@string/connect_via_hive"
+			android:textAllCaps="true" />
+
+		<EditText
+			android:id="@+id/et_hive_invitation"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:inputType="textMultiLine|textNoSuggestions"
+			android:text="@string/sample_hive_invitation"
+			android:textSize="16sp" />
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="right"
+			android:orientation="horizontal" >
+
+			<ImageButton
+				style="@style/NormalButton"
+				android:contentDescription="@string/qr_code"
+				android:src="@drawable/icon_qrcode" />
+
+			<ImageButton
+				style="@style/NormalButton"
+				android:contentDescription="@string/copy"
+				android:src="@drawable/ic_menu_copy" />
+
+			<ImageButton
+				style="@style/NormalButton"
+				android:contentDescription="@string/share"
+				android:src="@drawable/ic_menu_share" />
+		</LinearLayout>
+
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:padding="16dp"
+			android:text="@string/or_divider"
+			android:textAllCaps="true"
+			android:textSize="20sp"
+			android:textStyle="bold" />
+
+		<RadioButton
+			android:id="@+id/rb_add_bitcoin_address"
+			style="@style/RadioButtonSection"
+			android:text="@string/add_bitcoin_address"
+			android:textAllCaps="true" />
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal" >
+
+			<EditText
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_gravity="bottom"
+				android:layout_weight="1"
+				android:hint="@string/bitcoin_address"
+				android:inputType="textNoSuggestions" />
+
+			<ImageButton
+				style="@style/NormalButton"
+				android:contentDescription="@string/scan"
+				android:src="@drawable/icon_camera" />
+		</LinearLayout>
+	</RadioGroup>
+
+</LinearLayout>

@@ -179,6 +179,9 @@
 			android:label="@string/sweep_wallet_activity_title"
 			android:screenOrientation="behind"
 			android:windowSoftInputMode="adjustResize" />
+		<activity
+			android:name="com.hivewallet.androidclient.wallet.ui.AddContactActivity"
+			android:label="@string/add_contact" />
 
 		<provider
 			android:name="com.hivewallet.androidclient.wallet.AddressBookProvider"

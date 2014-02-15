@@ -5,6 +5,7 @@ import com.hivewallet.androidclient.wallet_test.R;
 
 import android.annotation.SuppressLint;
 import android.content.ContentUris;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -166,8 +167,8 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 		@Override
 		public void onClick(View v)
 		{
-			//			Intent intent = new Intent(getActivity(), AddContactActivity.class);
-			//			startActivity(intent);
+			Intent intent = new Intent(getActivity(), AddContactActivity.class);
+			startActivity(intent);
 		}
 	};
 }
