@@ -1,41 +1,46 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal"
-    android:orientation="vertical" >
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:layout_gravity="center_horizontal"
+	android:orientation="vertical"
+	android:paddingRight="16dp" >
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="horizontal" >
+	<LinearLayout
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal"
+		android:orientation="horizontal" >
 
-        <ImageButton
-            style="@style/LargeButton"
-            android:contentDescription="@string/receive_money"
-            android:src="@drawable/icon_receive_money" />
+		<ImageButton
+			android:id="@+id/ib_receive_money"
+			style="@style/LargeButton"
+			android:contentDescription="@string/receive_money"
+			android:src="@drawable/icon_receive_money" />
 
-        <ImageButton
-            style="@style/LargeButton"
-            android:contentDescription="@string/send_money"
-            android:src="@drawable/icon_send_money" />
-    </LinearLayout>
+		<ImageButton
+			android:id="@+id/ib_send_money"
+			style="@style/LargeButton"
+			android:contentDescription="@string/send_money"
+			android:src="@drawable/icon_send_money" />
+	</LinearLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="horizontal" >
+	<LinearLayout
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal"
+		android:orientation="horizontal" >
 
-        <ImageButton
-            style="@style/LargeButton"
-            android:contentDescription="@string/qr_code"
-            android:src="@drawable/icon_qrcode" />
+		<ImageButton
+			android:id="@+id/ib_show_qrcode"
+			style="@style/LargeButton"
+			android:contentDescription="@string/qr_code"
+			android:src="@drawable/icon_qrcode" />
 
-        <ImageButton
-            style="@style/LargeButton"
-            android:contentDescription="@string/scan"
-            android:src="@drawable/icon_camera" />
-    </LinearLayout>
+		<ImageButton
+			android:id="@+id/ib_scan_qrcode"
+			style="@style/LargeButton"
+			android:contentDescription="@string/scan"
+			android:src="@drawable/icon_camera" />
+	</LinearLayout>
 
 </LinearLayout>
