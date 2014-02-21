@@ -5,27 +5,16 @@
 	android:layout_height="match_parent"
 	android:orientation="vertical" >
 
-	<LinearLayout
+	<AutoCompleteTextView
+		android:id="@+id/actv_contact_name"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:orientation="horizontal" >
-
-		<ImageView
-			style="@style/LargeButton"
-			android:contentDescription="@string/contact_photo"
-			android:src="@drawable/ic_contact_picture" />
-
-		<AutoCompleteTextView
-			android:id="@+id/actv_contact_name"
-			android:layout_width="0dp"
-			android:layout_height="wrap_content"
-			android:layout_gravity="center_vertical"
-			android:layout_weight="1"
-			android:hint="@string/name"
-			android:inputType="textPersonName" />
-	</LinearLayout>
+		android:hint="@string/name"
+		android:inputType="textPersonName"
+		android:textSize="20sp" />
 
 	<RadioGroup
+		android:id="@+id/rg_contact_type"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:orientation="vertical"
@@ -44,29 +33,16 @@
 			android:layout_height="wrap_content"
 			android:inputType="textMultiLine|textNoSuggestions"
 			android:text="@string/sample_hive_invitation"
-			android:textSize="16sp" />
+			android:textSize="15sp" />
 
-		<LinearLayout
-			android:layout_width="match_parent"
+		<Button
+			android:id="@+id/b_share_invitation"
+			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:gravity="right"
-			android:orientation="horizontal" >
-
-			<ImageButton
-				style="@style/NormalButton"
-				android:contentDescription="@string/qr_code"
-				android:src="@drawable/icon_qrcode" />
-
-			<ImageButton
-				style="@style/NormalButton"
-				android:contentDescription="@string/copy"
-				android:src="@drawable/ic_menu_copy" />
-
-			<ImageButton
-				style="@style/NormalButton"
-				android:contentDescription="@string/share"
-				android:src="@drawable/ic_menu_share" />
-		</LinearLayout>
+			android:layout_gravity="right"
+			android:drawableLeft="@drawable/ic_menu_share"
+			android:text="@string/send_invitation"
+			android:textSize="16sp" />
 
 		<TextView
 			android:layout_width="wrap_content"
@@ -90,6 +66,7 @@
 			android:orientation="horizontal" >
 
 			<EditText
+				android:id="@+id/et_bitcoin_address"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
 				android:layout_gravity="bottom"
@@ -98,10 +75,21 @@
 				android:inputType="textNoSuggestions" />
 
 			<ImageButton
+				android:id="@+id/ib_camera"
 				style="@style/NormalButton"
 				android:contentDescription="@string/scan"
 				android:src="@drawable/icon_camera" />
 		</LinearLayout>
+
+		<Button
+			android:id="@+id/b_add_contact"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="right"
+			android:drawableLeft="@drawable/ic_menu_invite"
+			android:enabled="false"
+			android:text="@string/add_contact"
+			android:textSize="16sp" />
 	</RadioGroup>
 
 </LinearLayout>

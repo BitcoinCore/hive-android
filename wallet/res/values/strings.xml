@@ -264,12 +264,14 @@
 	<string name="qr_code">QR code</string>
 	<string name="scan">Scan</string>
 	<string name="name">Name</string>
-	<string name="sample_hive_invitation">Hi! I\'d like to connect with you via Hive to easily send and receive bitcoins. Hive is available for free on Google Play: https://play.google.com/store/apps/details?id=de.schildbach.wallet . After installing, please follow this link to accept my invitation: https://www.hivewallet.com/inv/fje934jsfjelsdf9ejfsdf . Thanks!</string>
+	<string name="sample_hive_invitation">Hi! I\'d like to connect with you via Hive to easily send and receive bitcoins. Hive is available for free on Google Play: https://play.google.com/store/apps/details?id=de.schildbach.wallet . After installing, please follow this link to accept my invitation: https://www.hivewallet.com/inv/fje934jsfjelsdf9ejfsdf .</string>
 	<string name="copy">Copy</string>
 	<string name="share">Share</string>
 	<string name="connect_via_hive">Connect via Hive</string>
 	<string name="or_divider">- OR -</string>
 	<string name="add_bitcoin_address">Add Bitcoin address</string>
 	<string name="bitcoin_address">Bitcoin address</string>
+	<string name="send_invitation">Send invitation</string>
+	<string name="send_hive_invitiation_via">Send Hive invitiation via</string>
 
 </resources>
