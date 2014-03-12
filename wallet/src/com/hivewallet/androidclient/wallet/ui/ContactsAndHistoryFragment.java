@@ -32,7 +32,7 @@ public class ContactsAndHistoryFragment extends SherlockFragment
 
 		chFragmentTabHost.addTab(chFragmentTabHost.newTabSpec("history").setIndicator(
 				"", getResources().getDrawable(R.drawable.ic_menu_recent_history)),
-				HistoryFragment.class, null);
+				TransactionsListFragment.class, null);
 
 	}
 }

@@ -151,9 +151,8 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 	{
 		super.onCreate(savedInstanceState);
 
-		setRetainInstance(true);
-
-		this.direction = (Direction) getArguments().getSerializable(KEY_DIRECTION);
+		if (getArguments() != null)
+			this.direction = (Direction) getArguments().getSerializable(KEY_DIRECTION);
 
 		final boolean showBackupWarning = direction == null || direction == Direction.RECEIVED;
 
