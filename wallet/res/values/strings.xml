@@ -274,5 +274,8 @@
 	<string name="send_invitation">Send invitation</string>
 	<string name="send_hive_invitiation_via">Send Hive invitiation via</string>
 	<string name="hive_connect_not_implemented_yet">Hive connect is not implemented yet. Sorry!</string>
+	<string name="add_contact_dialog_title">Add contact</string>
+	<string name="please_provide_a_contact_name">Please provide a contact name.</string>
+	<string name="please_provide_a_bitcoin_address">Please provide a Bitcoin address.</string>
 
 </resources>

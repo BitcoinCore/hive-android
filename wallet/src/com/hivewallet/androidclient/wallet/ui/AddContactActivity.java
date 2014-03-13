@@ -4,12 +4,15 @@ import javax.annotation.Nonnull;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.google.bitcoin.core.Transaction;
+import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.InputParser.StringInputParser;
 import com.hivewallet.androidclient.wallet_test.R;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -20,7 +23,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
-import android.widget.Toast;
 
 public class AddContactActivity extends SherlockFragmentActivity
 {
@@ -60,14 +62,45 @@ public class AddContactActivity extends SherlockFragmentActivity
 		contactTypeRadioGroup.setOnCheckedChangeListener(contactTypeOnCheckedChangeListener);
 		shareInvitationButton.setOnClickListener(shareInvitationOnClickListener);
 		cameraImageButton.setOnClickListener(cameraOnClickListener);
+		addContactButton.setOnClickListener(addContactOnClickListener);
 		
 		changeEnabledElements(true);
 	}
 	
-	public void handleScan()
+	private void handleScan()
 	{
 		startActivityForResult(new Intent(this, ScanActivity.class), REQUEST_CODE_SCAN);
-	}	
+	}
+	
+	private void handleAddContact()
+	{
+		final String contactName = contactNameAutoCompleteTextView.getText().toString().trim(); 
+		if (contactName.isEmpty()) {
+			showErrorMessage(R.string.please_provide_a_contact_name);
+			return;
+		}
+		
+		final String address = bitcoinAddressEditText.getText().toString().trim();
+		if (address.isEmpty()) {
+			showErrorMessage(R.string.please_provide_a_bitcoin_address);
+			return;
+		}
+		
+		final Uri uri = AddressBookProvider.contentUri(getPackageName()).buildUpon().appendPath(address).build();
+		final ContentValues values = new ContentValues();
+		values.put(AddressBookProvider.KEY_LABEL, contactName);
+		getContentResolver().insert(uri, values);
+		
+		finish();
+	}
+	
+	private void showErrorMessage(final int messageResId)
+	{
+		final DialogBuilder dialog = DialogBuilder.warn(this, R.string.add_contact_dialog_title);
+		dialog.setMessage(messageResId);
+		dialog.singleDismissButton(null);
+		dialog.show();
+	}
 	
 	private void changeEnabledElements(boolean isViaHive) {
 		shareInvitationButton.setEnabled(isViaHive);
@@ -83,8 +116,7 @@ public class AddContactActivity extends SherlockFragmentActivity
 		@Override
 		public void onClick(View v)
 		{
-			Toast.makeText(getApplicationContext(),
-					R.string.hive_connect_not_implemented_yet, Toast.LENGTH_LONG).show();
+			showErrorMessage(R.string.hive_connect_not_implemented_yet);
 			
 //			Intent intent = new Intent(android.content.Intent.ACTION_SEND);
 //			intent.setType("text/plain");
@@ -100,6 +132,15 @@ public class AddContactActivity extends SherlockFragmentActivity
 		public void onClick(View v)
 		{
 			handleScan();
+		}
+	};
+	
+	private OnClickListener addContactOnClickListener = new OnClickListener()
+	{
+		@Override
+		public void onClick(View v)
+		{
+			handleAddContact();
 		}
 	};
 	
