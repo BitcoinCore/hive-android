@@ -18,7 +18,7 @@ public class ContactsFragment extends SherlockFragment
 {
 	private static final ExampleContact[] exampleContacts =
 		{ new ExampleContact("Jackie Quinn", R.drawable.example_contact_woman_1, true)
-		, new ExampleContact("David Jwohnson", R.drawable.example_contact_man_1, false)
+		, new ExampleContact("David Johnson", R.drawable.example_contact_man_1, false)
 		, new ExampleContact("Lisa Greenfield", R.drawable.example_contact_woman_2, false)
 		, new ExampleContact("Carl Smith", R.drawable.example_contact_man_2, true)
 		};
