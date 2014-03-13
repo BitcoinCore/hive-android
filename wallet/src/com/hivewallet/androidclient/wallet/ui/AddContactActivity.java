@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
+import android.widget.Toast;
 
 public class AddContactActivity extends SherlockFragmentActivity
 {
@@ -51,6 +52,17 @@ public class AddContactActivity extends SherlockFragmentActivity
 		contactTypeRadioGroup.setOnCheckedChangeListener(contactTypeOnCheckedChangeListener);
 		
 		shareInvitationButton.setOnClickListener(shareInvitationOnClickListener);
+		
+		changeEnabledElements(true);
+	}
+	
+	private void changeEnabledElements(boolean isViaHive) {
+		shareInvitationButton.setEnabled(isViaHive);
+		hiveInvitationEditText.setEnabled(isViaHive);
+		
+		addContactButton.setEnabled(!isViaHive);
+		cameraImageButton.setEnabled(!isViaHive);
+		bitcoinAddressEditText.setEnabled(!isViaHive);
 	}
 	
 	private OnClickListener shareInvitationOnClickListener = new OnClickListener()
@@ -58,11 +70,14 @@ public class AddContactActivity extends SherlockFragmentActivity
 		@Override
 		public void onClick(View v)
 		{
-			Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-			intent.setType("text/plain");
-			intent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Hive invitation");
-			intent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.sample_hive_invitation));
-			startActivity(Intent.createChooser(intent, getString(R.string.send_hive_invitiation_via)));
+			Toast.makeText(getApplicationContext(),
+					R.string.hive_connect_not_implemented_yet, Toast.LENGTH_LONG).show();
+			
+//			Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+//			intent.setType("text/plain");
+//			intent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Hive invitation");
+//			intent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.sample_hive_invitation));
+//			startActivity(Intent.createChooser(intent, getString(R.string.send_hive_invitiation_via)));
 		}
 	};
 	
@@ -73,12 +88,10 @@ public class AddContactActivity extends SherlockFragmentActivity
 		{
 			switch (checkedId) {
 				case R.id.rb_connect_via_hive:
-					shareInvitationButton.setEnabled(true);
-					addContactButton.setEnabled(false);
+					changeEnabledElements(true);
 					break;
 				case R.id.rb_add_bitcoin_address:
-					shareInvitationButton.setEnabled(false);
-					addContactButton.setEnabled(true);
+					changeEnabledElements(false);
 					break;
 			}
 		}
