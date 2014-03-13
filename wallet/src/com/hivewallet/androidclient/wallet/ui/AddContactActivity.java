@@ -1,8 +1,14 @@
 package com.hivewallet.androidclient.wallet.ui;
 
+import javax.annotation.Nonnull;
+
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.google.bitcoin.core.Transaction;
+import com.hivewallet.androidclient.wallet.PaymentIntent;
+import com.hivewallet.androidclient.wallet.ui.InputParser.StringInputParser;
 import com.hivewallet.androidclient.wallet_test.R;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -18,6 +24,8 @@ import android.widget.Toast;
 
 public class AddContactActivity extends SherlockFragmentActivity
 {
+	private static final int REQUEST_CODE_SCAN = 0;
+	
 	private static final String[] CONTACTS = new String[] {
 		"Linda Greenfield", "Bob Smith", "John Doe"
 	};
@@ -50,11 +58,16 @@ public class AddContactActivity extends SherlockFragmentActivity
 		contactNameAutoCompleteTextView.setAdapter(adapter);
 
 		contactTypeRadioGroup.setOnCheckedChangeListener(contactTypeOnCheckedChangeListener);
-		
 		shareInvitationButton.setOnClickListener(shareInvitationOnClickListener);
+		cameraImageButton.setOnClickListener(cameraOnClickListener);
 		
 		changeEnabledElements(true);
 	}
+	
+	public void handleScan()
+	{
+		startActivityForResult(new Intent(this, ScanActivity.class), REQUEST_CODE_SCAN);
+	}	
 	
 	private void changeEnabledElements(boolean isViaHive) {
 		shareInvitationButton.setEnabled(isViaHive);
@@ -81,6 +94,15 @@ public class AddContactActivity extends SherlockFragmentActivity
 		}
 	};
 	
+	private OnClickListener cameraOnClickListener = new OnClickListener()
+	{
+		@Override
+		public void onClick(View v)
+		{
+			handleScan();
+		}
+	};
+	
 	private OnCheckedChangeListener contactTypeOnCheckedChangeListener = new OnCheckedChangeListener()
 	{
 		@Override
@@ -96,4 +118,37 @@ public class AddContactActivity extends SherlockFragmentActivity
 			}
 		}
 	};
+	
+	@Override
+	public void onActivityResult(final int requestCode, final int resultCode, final Intent intent)
+	{
+		if (requestCode == REQUEST_CODE_SCAN && resultCode == Activity.RESULT_OK)
+		{
+			final String input = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
+
+			new StringInputParser(input)
+			{
+				@Override
+				protected void handlePaymentIntent(@Nonnull PaymentIntent paymentIntent)
+				{
+					if (!paymentIntent.hasAddress())
+						return;
+					
+					bitcoinAddressEditText.setText(paymentIntent.getAddress().toString());
+				}
+
+				@Override
+				protected void handleDirectTransaction(@Nonnull Transaction transaction)
+				{
+					/* ignore - do nothing */
+				}
+
+				@Override
+				protected void error(int messageResId, Object... messageArgs)
+				{
+					/* ignore - do nothing */
+				}
+			}.parse();
+		}
+	}	
 }
