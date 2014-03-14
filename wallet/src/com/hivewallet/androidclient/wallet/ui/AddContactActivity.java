@@ -7,16 +7,19 @@ import com.google.bitcoin.core.Transaction;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.InputParser.StringInputParser;
+import com.hivewallet.androidclient.wallet.util.PhoneContactsLookupToolkit;
 import com.hivewallet.androidclient.wallet_test.R;
 
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,13 +27,11 @@ import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 
-public class AddContactActivity extends SherlockFragmentActivity
+public class AddContactActivity extends SherlockFragmentActivity implements LoaderCallbacks<Cursor>
 {
 	private static final int REQUEST_CODE_SCAN = 0;
 	
-	private static final String[] CONTACTS = new String[] {
-		"Linda Greenfield", "Bob Smith", "John Doe"
-	};
+	private PhoneContactsLookupToolkit phoneContactsLookupToolkit;
 
 	private AutoCompleteTextView contactNameAutoCompleteTextView;
 	private RadioGroup contactTypeRadioGroup;
@@ -53,11 +54,12 @@ public class AddContactActivity extends SherlockFragmentActivity
 		cameraImageButton = (ImageButton)findViewById(R.id.ib_camera);
 		hiveInvitationEditText = (EditText)findViewById(R.id.et_hive_invitation);
 		bitcoinAddressEditText = (EditText)findViewById(R.id.et_bitcoin_address);
-		
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-				this, android.R.layout.simple_dropdown_item_1line, CONTACTS);
+
+		phoneContactsLookupToolkit = new PhoneContactsLookupToolkit(this,
+				android.R.layout.simple_dropdown_item_1line, android.R.id.text1);		
 		contactNameAutoCompleteTextView.setThreshold(1);
-		contactNameAutoCompleteTextView.setAdapter(adapter);
+		contactNameAutoCompleteTextView.setAdapter(phoneContactsLookupToolkit.getAdapter());
+		getSupportLoaderManager().initLoader(0, null, this);
 
 		contactTypeRadioGroup.setOnCheckedChangeListener(contactTypeOnCheckedChangeListener);
 		shareInvitationButton.setOnClickListener(shareInvitationOnClickListener);
@@ -159,7 +161,7 @@ public class AddContactActivity extends SherlockFragmentActivity
 			}
 		}
 	};
-	
+		
 	@Override
 	public void onActivityResult(final int requestCode, final int resultCode, final Intent intent)
 	{
@@ -191,5 +193,23 @@ public class AddContactActivity extends SherlockFragmentActivity
 				}
 			}.parse();
 		}
+	}
+
+	@Override
+	public Loader<Cursor> onCreateLoader(int loaderId, Bundle args)
+	{
+		return phoneContactsLookupToolkit.onCreateLoader(loaderId, args);
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)
+	{
+		phoneContactsLookupToolkit.onLoadFinished(loader, cursor);
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> loader)
+	{
+		phoneContactsLookupToolkit.onLoaderReset(loader);
 	}	
 }
