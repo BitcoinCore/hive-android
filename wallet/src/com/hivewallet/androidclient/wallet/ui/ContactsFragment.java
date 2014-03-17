@@ -3,17 +3,21 @@ package com.hivewallet.androidclient.wallet.ui;
 import com.actionbarsherlock.app.SherlockFragment;
 import com.google.bitcoin.core.AddressFormatException;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
-import com.hivewallet.androidclient.wallet.util.PhoneContactsLookupToolkit;
+import com.hivewallet.androidclient.wallet.util.PhoneContactPictureLookupService;
 import com.hivewallet.androidclient.wallet_test.R;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -79,14 +83,16 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 			private boolean setContactPhoto(ImageView imageView, Cursor cursor, int columnIndex) {
 				String label = cursor.getString(columnIndex);
 				
-				// this query runs on the UI thread - should probably be changed
-				// to run in the background at some point
-				Uri uri = PhoneContactsLookupToolkit.lookupPhoneContactPicture(getActivity(), label);
-				if (uri != null) {
-					imageView.setImageURI(uri);
-				} else {
-					imageView.setImageResource(R.drawable.ic_contact_picture);
-				}
+				// set placeholder image
+				imageView.setImageResource(R.drawable.ic_contact_picture);
+				
+				// tag image view
+				imageView.setTag(label);
+				
+				// request picture lookup
+				Intent intent = new Intent(activity, PhoneContactPictureLookupService.class);
+				intent.putExtra(PhoneContactPictureLookupService.LABEL, label);
+				activity.startService(intent);
 	    	
 		    	return true;
 			}
@@ -124,7 +130,24 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 		super.onAttach(activity);
 
 		this.activity = (WalletActivity) activity;
-	}	
+	}
+	
+	@Override
+	public void onResume()
+	{
+		super.onResume();
+		
+		IntentFilter iff = new IntentFilter(PhoneContactPictureLookupService.ACTION);
+		LocalBroadcastManager.getInstance(activity).registerReceiver(broadcastReceiver, iff);
+	}
+	
+	@Override
+	public void onPause()
+	{
+		super.onPause();
+		
+		LocalBroadcastManager.getInstance(activity).unregisterReceiver(broadcastReceiver);
+	}
 
 	private OnClickListener addContactOnClickListener = new OnClickListener()
 	{
@@ -162,4 +185,19 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 	{
 		contactsSimpleCursorAdapter.swapCursor(null);
 	}
+	
+	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver()
+	{
+		@Override
+		public void onReceive(Context context, Intent intent)
+		{
+			String label = intent.getStringExtra(PhoneContactPictureLookupService.LABEL);
+			Uri uri = Uri.parse(intent.getStringExtra(PhoneContactPictureLookupService.URI));
+			
+			View view = contactsListView.findViewWithTag(label);
+			if (view != null) {
+				((ImageView)view).setImageURI(uri);
+			}
+		}
+	};
 }

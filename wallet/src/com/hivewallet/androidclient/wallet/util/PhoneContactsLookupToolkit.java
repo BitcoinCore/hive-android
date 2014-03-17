@@ -1,6 +1,7 @@
 package com.hivewallet.androidclient.wallet.util;
 
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -103,10 +104,10 @@ public class PhoneContactsLookupToolkit implements LoaderCallbacks<Cursor>
 	}
 	
 	@SuppressLint("InlinedApi")
-	static public Uri lookupPhoneContactPicture(Context context, String label) {
+	static public Uri lookupPhoneContactPicture(ContentResolver contentResolver, String label) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			String[] projection = { Contacts.PHOTO_URI };
-			Cursor cursor = context.getContentResolver().query
+			Cursor cursor = contentResolver.query
 				( Contacts.CONTENT_URI
 				, projection
 				, Contacts.DISPLAY_NAME_PRIMARY + " LIKE ?"
@@ -114,12 +115,14 @@ public class PhoneContactsLookupToolkit implements LoaderCallbacks<Cursor>
 				, null
 				);
 			
+			Uri uri = null;
 			if (cursor.moveToNext()) {
 				int cIdx = cursor.getColumnIndexOrThrow(Contacts.PHOTO_URI);
-				return Uri.parse(cursor.getString(cIdx));
-			} else {
-				return null;
+				uri = Uri.parse(cursor.getString(cIdx));
 			}
+			
+			cursor.close();
+			return uri;
 		} else {
 			// Contact picture lookup not implement for pre-Honeycomb
 			return null;
