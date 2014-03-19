@@ -29,7 +29,9 @@
 		android:layout_height="match_parent"
 		android:layout_weight="1"
 		android:clickable="true"
-		android:gravity="center_vertical" />
+		android:gravity="center_vertical"
+		android:paddingLeft="@dimen/contact_photo_additional_padding"
+		android:textSize="@dimen/font_size_normal" />
 
 	<ImageButton
 		android:id="@+id/ib_contact_receive_money"

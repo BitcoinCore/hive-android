@@ -49,6 +49,7 @@ import com.google.bitcoin.wallet.DefaultCoinSelector;
 
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.Constants;
+import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 import com.hivewallet.androidclient.wallet.util.CircularProgressView;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
 import com.hivewallet.androidclient.wallet_test.R;
@@ -66,6 +67,8 @@ public class TransactionsListAdapter extends BaseAdapter
 	private final List<Transaction> transactions = new ArrayList<Transaction>();
 	private int precision = 0;
 	private int shift = 0;
+	private String currencyCode = "";
+	private ExchangeRate exchangeRate = null;
 	private boolean showEmptyText = false;
 	private boolean showBackupWarning = false;
 
@@ -107,6 +110,19 @@ public class TransactionsListAdapter extends BaseAdapter
 		this.precision = precision;
 		this.shift = shift;
 
+		notifyDataSetChanged();
+	}
+	
+	public void setCurrencyCode(@Nonnull final String currencyCode)
+	{
+		this.currencyCode = currencyCode;
+		
+		notifyDataSetChanged();
+	}
+	
+	public void setExchangeRate(@Nonnull final ExchangeRate exchangeRate) {
+		this.exchangeRate = exchangeRate;
+		
 		notifyDataSetChanged();
 	}
 
@@ -199,7 +215,7 @@ public class TransactionsListAdapter extends BaseAdapter
 		if (type == VIEW_TYPE_TRANSACTION)
 		{
 			if (row == null)
-				row = inflater.inflate(R.layout.transaction_row_extended, null);
+				row = inflater.inflate(R.layout.hive_transaction_row_extended, null);
 
 			final Transaction tx = getItem(position);
 			bindView(row, tx);
@@ -291,42 +307,42 @@ public class TransactionsListAdapter extends BaseAdapter
 			rowTime.setTextColor(textColor);
 		}
 
-		// receiving or sending
+		// receiving or sending - symbols are reversed, to point to the contact picture
 		final TextView rowFromTo = (TextView) row.findViewById(R.id.transaction_row_fromto);
 		if (isInternal)
 			rowFromTo.setText(R.string.symbol_internal);
 		else if (sent)
-			rowFromTo.setText(R.string.symbol_to);
-		else
 			rowFromTo.setText(R.string.symbol_from);
+		else
+			rowFromTo.setText(R.string.symbol_to);
 		rowFromTo.setTextColor(textColor);
 
 		// coinbase
 		final View rowCoinbase = row.findViewById(R.id.transaction_row_coinbase);
 		rowCoinbase.setVisibility(isCoinBase ? View.VISIBLE : View.GONE);
 
-		// address
-		final TextView rowAddress = (TextView) row.findViewById(R.id.transaction_row_address);
+		// address, if it can be identified
 		final Address address = sent ? WalletUtils.getFirstToAddress(tx) : WalletUtils.getFirstFromAddress(tx);
-		final String label;
-		if (isCoinBase)
-			label = textCoinBase;
-		else if (isInternal)
-			label = textInternal;
-		else if (address != null)
+		String label = null;
+		if (address != null)
 			label = resolveLabel(address.toString());
-		else
-			label = "?";
-		rowAddress.setTextColor(textColor);
-		rowAddress.setText(label != null ? label : address.toString());
-		rowAddress.setTypeface(label != null ? Typeface.DEFAULT : Typeface.MONOSPACE);
-
-		// value
-		final CurrencyTextView rowValue = (CurrencyTextView) row.findViewById(R.id.transaction_row_value);
+		
+		// prepare tx msg
+		final String prefix = context.getResources().getString(
+				sent ? R.string.tx_msg_prefix_sent : R.string.tx_msg_prefix_received);
+		String suffix = null;
+		if (label != null)
+			suffix = context.getResources().getString(
+					sent ? R.string.tx_msg_suffix_sent : R.string.tx_msg_suffix_received, label);
+		
+		final CurrencyPlusInfoTextView rowValue = (CurrencyPlusInfoTextView) row.findViewById(R.id.transaction_row_value);
 		rowValue.setTextColor(textColor);
-		rowValue.setAlwaysSigned(true);
 		rowValue.setPrecision(precision, shift);
-		rowValue.setAmount(value);
+		rowValue.setAmount(value.abs(), currencyCode);
+		rowValue.setExchangeRate(exchangeRate);
+		rowValue.setValidExchangeRate(!Constants.TEST);
+		rowValue.setPrefix(prefix);
+		rowValue.setSuffix(suffix);
 
 		// extended message
 		final View rowExtend = row.findViewById(R.id.transaction_row_extend);

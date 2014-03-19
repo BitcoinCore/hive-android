@@ -277,5 +277,11 @@
 	<string name="add_contact_dialog_title">Add contact</string>
 	<string name="please_provide_a_contact_name">Please provide a contact name.</string>
 	<string name="please_provide_a_bitcoin_address">Please provide a Bitcoin address.</string>
-
+	<string name="coinbase_icon">Coinbase icon</string>
+	<string name="plus_symbol">Plus symbol</string>
+	<string name="minus_symbol">Minus symbol</string>
+	<string name="tx_msg_prefix_sent">Sent</string>
+	<string name="tx_msg_prefix_received">Received</string>
+	<string name="tx_msg_suffix_sent"><![CDATA[to <b>%s</b>]]></string>
+	<string name="tx_msg_suffix_received"><![CDATA[from <b>%s</b>]]></string>
 </resources>

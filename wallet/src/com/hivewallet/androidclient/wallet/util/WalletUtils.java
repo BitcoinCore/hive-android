@@ -62,6 +62,7 @@ import com.google.bitcoin.core.Wallet;
 import com.google.bitcoin.script.Script;
 import com.google.bitcoin.store.UnreadableWalletException;
 import com.google.bitcoin.store.WalletProtobufSerializer;
+import com.google.common.math.BigIntegerMath;
 
 import com.hivewallet.androidclient.wallet.Constants;
 
@@ -122,7 +123,13 @@ public class WalletUtils
 
 	public static void formatSignificant(@Nonnull final Spannable spannable, @Nullable final RelativeSizeSpan insignificantRelativeSizeSpan)
 	{
-		spannable.removeSpan(SIGNIFICANT_SPAN);
+		formatSignificant(spannable, insignificantRelativeSizeSpan, true);
+	}
+
+	public static void formatSignificant(@Nonnull final Spannable spannable, @Nullable final RelativeSizeSpan insignificantRelativeSizeSpan, boolean useBold)
+	{
+		if (useBold)
+			spannable.removeSpan(SIGNIFICANT_SPAN);
 		if (insignificantRelativeSizeSpan != null)
 			spannable.removeSpan(insignificantRelativeSizeSpan);
 
@@ -130,7 +137,7 @@ public class WalletUtils
 		if (m.find())
 		{
 			final int pivot = m.group().length();
-			if (pivot > 0)
+			if (pivot > 0 && useBold)
 				spannable.setSpan(SIGNIFICANT_SPAN, 0, pivot, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 			if (spannable.length() > pivot && insignificantRelativeSizeSpan != null)
 				spannable.setSpan(insignificantRelativeSizeSpan, pivot, spannable.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);

@@ -41,6 +41,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.database.ContentObserver;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -73,7 +74,9 @@ import com.google.bitcoin.utils.Threading;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.Constants;
+import com.hivewallet.androidclient.wallet.ExchangeRatesProvider;
 import com.hivewallet.androidclient.wallet.WalletApplication;
+import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 import com.hivewallet.androidclient.wallet.util.BitmapFragment;
 import com.hivewallet.androidclient.wallet.util.Nfc;
 import com.hivewallet.androidclient.wallet.util.Qr;
@@ -105,6 +108,9 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 	private Direction direction;
 
 	private final Handler handler = new Handler();
+	
+	private static final int ID_TX_LOADER = 0;
+	private static final int ID_RATE_LOADER = 1;
 
 	private static final String KEY_DIRECTION = "direction";
 	private static final long THROTTLE_MS = DateUtils.SECOND_IN_MILLIS;
@@ -169,7 +175,8 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 
 		config.registerOnSharedPreferenceChangeListener(this);
 
-		loaderManager.initLoader(0, null, this);
+		loaderManager.initLoader(ID_TX_LOADER, null, this);
+		loaderManager.initLoader(ID_RATE_LOADER, null, rateLoaderCallbacks);
 
 		wallet.addEventListener(transactionChangeListener, Threading.SAME_THREAD);
 
@@ -197,7 +204,8 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 		wallet.removeEventListener(transactionChangeListener);
 		transactionChangeListener.removeCallbacks();
 
-		loaderManager.destroyLoader(0);
+		loaderManager.destroyLoader(ID_TX_LOADER);
+		loaderManager.destroyLoader(ID_RATE_LOADER);
 
 		config.unregisterOnSharedPreferenceChangeListener(this);
 
@@ -465,6 +473,31 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 			}
 		};
 	}
+	
+	private final LoaderCallbacks<Cursor> rateLoaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>()
+	{
+		@Override
+		public Loader<Cursor> onCreateLoader(final int id, final Bundle args)
+		{
+			return new ExchangeRateLoader(activity, config);
+		}
+
+		@Override
+		public void onLoadFinished(final Loader<Cursor> loader, final Cursor data)
+		{
+			if (data != null)
+			{
+				data.moveToFirst();
+				final ExchangeRate exchangeRate = ExchangeRatesProvider.getExchangeRate(data);
+				adapter.setExchangeRate(exchangeRate);
+			}
+		}
+
+		@Override
+		public void onLoaderReset(final Loader<Cursor> loader)
+		{
+		}
+	};	
 
 	@Override
 	public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key)
@@ -479,6 +512,7 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 		final int btcShift = config.getBtcShift();
 
 		adapter.setPrecision(btcPrecision, btcShift);
+		adapter.setCurrencyCode(config.getBtcPrefix());
 		adapter.clearLabelCache();
 	}
 }

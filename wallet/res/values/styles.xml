@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
 	<style name="My.Theme" parent="@style/Theme.Sherlock.Light.DarkActionBar.ForceOverflow">
 		<item name="actionBarStyle">@style/My.Widget.ActionBar</item>
@@ -121,5 +121,9 @@
 		<item name="android:drawableBottom">@drawable/section_header</item>
 		<item name="android:textColor">@color/section_header_color</item>
 	</style>
-
+	
+	<style name="TransactionDirectionIcon">
+		<item name="android:layout_width">16dp</item>
+		<item name="android:layout_height">16dp</item>
+	</style>
 </resources>
