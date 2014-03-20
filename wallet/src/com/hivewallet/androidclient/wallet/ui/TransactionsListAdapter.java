@@ -50,6 +50,7 @@ import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 import com.hivewallet.androidclient.wallet.util.CircularProgressView;
+import com.hivewallet.androidclient.wallet.util.GenericUtils;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
 import com.hivewallet.androidclient.wallet_test.R;
 
@@ -323,16 +324,19 @@ public class TransactionsListAdapter extends BaseAdapter
 		// address, if it can be identified
 		final Address address = sent ? WalletUtils.getFirstToAddress(tx) : WalletUtils.getFirstFromAddress(tx);
 		String label = null;
-		if (address != null)
+		String suffixData = null;
+		if (address != null) {
 			label = resolveLabel(address.toString());
+			suffixData = label != null ? label : GenericUtils.shortenString(address.toString());
+		}
 		
 		// prepare tx msg
 		final String prefix = context.getResources().getString(
 				sent ? R.string.tx_msg_prefix_sent : R.string.tx_msg_prefix_received);
 		String suffix = null;
-		if (label != null)
+		if (suffixData != null)
 			suffix = context.getResources().getString(
-					sent ? R.string.tx_msg_suffix_sent : R.string.tx_msg_suffix_received, label);
+					sent ? R.string.tx_msg_suffix_sent : R.string.tx_msg_suffix_received, suffixData);
 		
 		// prepare the display of amounts
 		final CurrencyPlusInfoTextView rowValue = (CurrencyPlusInfoTextView) row.findViewById(R.id.transaction_row_value);
