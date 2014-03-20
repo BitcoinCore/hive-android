@@ -58,6 +58,7 @@ public final class CurrencyPlusInfoTextView extends TextView
 	private RelativeSizeSpan insignificantRelativeSizeSpan = null;
 	private RelativeSizeSpan insignificantRelativeSizeSpanLocalValue = null;
 	private boolean isValidExchangeRate = true;
+	private boolean useBold = false;
 
 	public CurrencyPlusInfoTextView(final Context context)
 	{
@@ -107,6 +108,12 @@ public final class CurrencyPlusInfoTextView extends TextView
 		this.isValidExchangeRate = isValidExchangeRate;
 		updateView();
 	}
+	
+	public void setUseBold(boolean useBold)
+	{
+		this.useBold = useBold;
+		updateView();
+	}
 
 	public void setInsignificantRelativeSize(final float insignificantRelativeSize)
 	{
@@ -135,9 +142,12 @@ public final class CurrencyPlusInfoTextView extends TextView
 		s = GenericUtils.formatValue(myAmount, precision, shift);
 		
 		final Editable text = new SpannableStringBuilder(s);
-		WalletUtils.formatSignificant(text, insignificantRelativeSizeSpan);
+		WalletUtils.formatSignificant(text, insignificantRelativeSizeSpan, useBold);
 		
-		text.append(Html.fromHtml("<b>&nbsp;" + mySuffix + "</b>"));
+		if (useBold)
+			text.append(Html.fromHtml("<b>&nbsp;" + mySuffix + "</b>"));
+		else
+			text.append(" " + mySuffix);
 		
 		return text;
 	}

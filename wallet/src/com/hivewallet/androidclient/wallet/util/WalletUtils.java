@@ -193,6 +193,18 @@ public class WalletUtils
 			return null;
 		}
 	}
+	
+	@CheckForNull
+	public static BigInteger sumOfOutputs(@Nonnull final Transaction tx)
+	{
+		BigInteger total = BigInteger.ZERO;
+		for (final TransactionOutput output : tx.getOutputs())
+		{
+			total = total.add(output.getValue());
+		}
+		
+		return total;
+	}
 
 	public static boolean isInternal(@Nonnull final Transaction tx)
 	{

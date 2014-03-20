@@ -30,7 +30,6 @@ import javax.annotation.Nonnull;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
@@ -335,14 +334,36 @@ public class TransactionsListAdapter extends BaseAdapter
 			suffix = context.getResources().getString(
 					sent ? R.string.tx_msg_suffix_sent : R.string.tx_msg_suffix_received, label);
 		
+		// prepare the display of amounts
 		final CurrencyPlusInfoTextView rowValue = (CurrencyPlusInfoTextView) row.findViewById(R.id.transaction_row_value);
 		rowValue.setTextColor(textColor);
 		rowValue.setPrecision(precision, shift);
-		rowValue.setAmount(value.abs(), currencyCode);
 		rowValue.setExchangeRate(exchangeRate);
 		rowValue.setValidExchangeRate(!Constants.TEST);
 		rowValue.setPrefix(prefix);
 		rowValue.setSuffix(suffix);
+		rowValue.setUseBold(true);
+		
+		final CurrencyPlusInfoTextView rowFee = (CurrencyPlusInfoTextView) row.findViewById(R.id.transaction_row_fee);
+		if (sent) {
+			// show fee separately for outgoing transactions
+			final BigInteger valueWithoutFee = WalletUtils.sumOfOutputs(tx).subtract(tx.getValueSentToMe(wallet));
+			final BigInteger fee = value.abs().subtract(valueWithoutFee);
+			
+			rowValue.setAmount(valueWithoutFee, currencyCode);
+			
+			rowFee.setTextColor(textColor);
+			rowFee.setPrecision(precision, shift);
+			rowFee.setAmount(fee, currencyCode);
+			rowFee.setExchangeRate(exchangeRate);
+			rowFee.setValidExchangeRate(!Constants.TEST);
+			rowFee.setPrefix(context.getResources().getString(R.string.tx_fee));
+		} else {
+			// otherwise just show the amount received
+			rowValue.setAmount(value, currencyCode);
+			
+			rowFee.setVisibility(View.GONE);
+		}
 
 		// extended message
 		final View rowExtend = row.findViewById(R.id.transaction_row_extend);
