@@ -28,14 +28,17 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.net.Uri;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.bitcoin.core.Address;
@@ -51,6 +54,7 @@ import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 import com.hivewallet.androidclient.wallet.util.CircularProgressView;
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
+import com.hivewallet.androidclient.wallet.util.PhoneContactPictureLookupService;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
 import com.hivewallet.androidclient.wallet_test.R;
 
@@ -76,17 +80,20 @@ public class TransactionsListAdapter extends BaseAdapter
 	private final int colorInsignificant;
 	private final int colorError;
 	private final int colorCircularBuilding = Color.parseColor("#44ff44");
-	private final String textCoinBase;
-	private final String textInternal;
 
 	private final Map<String, String> labelCache = new HashMap<String, String>();
 	private final static String CACHE_NULL_MARKER = "";
+	
+	private final Map<String, Uri> photoCache = new HashMap<String, Uri>();
+	private int photoTagCounter = 0; 
 
 	private static final String CONFIDENCE_SYMBOL_DEAD = "\u271D"; // latin cross
 	private static final String CONFIDENCE_SYMBOL_UNKNOWN = "?";
 
 	private static final int VIEW_TYPE_TRANSACTION = 0;
 	private static final int VIEW_TYPE_WARNING = 1;
+	
+	private static final Uri NO_PHOTO_URI = Uri.parse("photo:no_photo");	// magic marker
 
 	public TransactionsListAdapter(final Context context, @Nonnull final Wallet wallet, final int maxConnectedPeers, final boolean showBackupWarning)
 	{
@@ -101,8 +108,6 @@ public class TransactionsListAdapter extends BaseAdapter
 		colorSignificant = resources.getColor(R.color.fg_significant);
 		colorInsignificant = resources.getColor(R.color.fg_insignificant);
 		colorError = resources.getColor(R.color.fg_error);
-		textCoinBase = context.getString(R.string.wallet_transactions_fragment_coinbase);
-		textInternal = context.getString(R.string.wallet_transactions_fragment_internal);
 	}
 
 	public void setPrecision(final int precision, final int shift)
@@ -369,6 +374,13 @@ public class TransactionsListAdapter extends BaseAdapter
 			rowFee.setVisibility(View.GONE);
 		}
 
+		// contact photo
+		final ImageView rowContactPhoto = (ImageView) row.findViewById(R.id.transaction_row_contact_photo);
+		if (label != null)
+			handleContactPhoto(rowContactPhoto, label);
+		else
+			rowContactPhoto.setImageResource(R.drawable.ic_contact_picture);
+
 		// extended message
 		final View rowExtend = row.findViewById(R.id.transaction_row_extend);
 		if (rowExtend != null)
@@ -421,6 +433,42 @@ public class TransactionsListAdapter extends BaseAdapter
 			}
 		}
 	}
+	
+	private void handleContactPhoto(ImageView rowContactPhoto, @Nonnull String label)
+	{
+		Uri cachedUri = photoCache.get(label);
+		
+		if (cachedUri == NO_PHOTO_URI)
+		{
+			rowContactPhoto.setImageResource(R.drawable.ic_contact_picture);
+		}
+		else if (cachedUri != null)
+		{
+			rowContactPhoto.setImageURI(cachedUri);
+		}
+		else
+		{
+			// tag the image view
+			String tag = label + photoTagCounter;
+			rowContactPhoto.setTag(tag);
+			
+			// increase tag counter
+			photoTagCounter++;
+			if (photoTagCounter == Integer.MAX_VALUE)
+				photoTagCounter = 0;
+			
+			// request picture lookup
+			Intent intent = new Intent(context, PhoneContactPictureLookupService.class);
+			intent.putExtra(PhoneContactPictureLookupService.LABEL, label);
+			intent.putExtra(PhoneContactPictureLookupService.TAG, tag);
+			context.startService(intent);
+		}
+	}
+	
+	public void supplyContactPhoto(String label, Uri uri)
+	{
+		photoCache.put(label, uri);
+	}
 
 	private String resolveLabel(@Nonnull final String address)
 	{
@@ -443,6 +491,7 @@ public class TransactionsListAdapter extends BaseAdapter
 	public void clearLabelCache()
 	{
 		labelCache.clear();
+		photoCache.clear();
 
 		notifyDataSetChanged();
 	}

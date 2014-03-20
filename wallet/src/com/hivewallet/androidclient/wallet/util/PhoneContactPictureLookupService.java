@@ -9,6 +9,7 @@ public class PhoneContactPictureLookupService extends IntentService
 {
 	public static final String ACTION = "phonecontactpicturelookupresult";
 	public static final String LABEL = "label";
+	public static final String TAG = "tag";
 	public static final String URI = "uri";
 	
 	public PhoneContactPictureLookupService()
@@ -20,12 +21,14 @@ public class PhoneContactPictureLookupService extends IntentService
 	protected void onHandleIntent(Intent intent)
 	{
 		String label = intent.getStringExtra(LABEL);
+		String tag = intent.getStringExtra(TAG);
 		Uri uri = PhoneContactsLookupToolkit.lookupPhoneContactPicture(this.getContentResolver(), label);
 		
 		if (uri != null) {
 			Intent resultIntent = new Intent();
 			resultIntent.setAction(ACTION);
 			resultIntent.putExtra(LABEL, label);
+			resultIntent.putExtra(TAG, tag);
 			resultIntent.putExtra(URI, uri.toString());
 			LocalBroadcastManager.getInstance(this).sendBroadcast(resultIntent);
 		}

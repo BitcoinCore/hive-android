@@ -35,6 +35,8 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 	private ImageButton addContactImageButton;
 	
 	private SimpleCursorAdapter contactsSimpleCursorAdapter;
+	
+	private int photoTagCounter = 0; 
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -86,12 +88,19 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 				// set placeholder image
 				imageView.setImageResource(R.drawable.ic_contact_picture);
 				
-				// tag image view
-				imageView.setTag(label);
+				// tag the image view
+				String tag = label + photoTagCounter;
+				imageView.setTag(tag);
+				
+				// increase tag counter
+				photoTagCounter++;
+				if (photoTagCounter == Integer.MAX_VALUE)
+					photoTagCounter = 0;				
 				
 				// request picture lookup
 				Intent intent = new Intent(activity, PhoneContactPictureLookupService.class);
 				intent.putExtra(PhoneContactPictureLookupService.LABEL, label);
+				intent.putExtra(PhoneContactPictureLookupService.TAG, tag);
 				activity.startService(intent);
 	    	
 		    	return true;
@@ -191,10 +200,10 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 		@Override
 		public void onReceive(Context context, Intent intent)
 		{
-			String label = intent.getStringExtra(PhoneContactPictureLookupService.LABEL);
+			String tag = intent.getStringExtra(PhoneContactPictureLookupService.TAG);
 			Uri uri = Uri.parse(intent.getStringExtra(PhoneContactPictureLookupService.URI));
 			
-			View view = contactsListView.findViewWithTag(label);
+			View view = contactsListView.findViewWithTag(tag);
 			if (view != null) {
 				((ImageView)view).setImageURI(uri);
 			}
