@@ -367,6 +367,7 @@ public class TransactionsListAdapter extends BaseAdapter
 			rowFee.setExchangeRate(exchangeRate);
 			rowFee.setValidExchangeRate(!Constants.TEST);
 			rowFee.setPrefix(context.getResources().getString(R.string.tx_fee));
+			rowFee.setVisibility(View.VISIBLE);
 		} else {
 			// otherwise just show the amount received
 			rowValue.setAmount(value, currencyCode);
