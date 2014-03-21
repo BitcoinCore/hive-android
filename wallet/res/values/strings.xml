@@ -252,7 +252,6 @@
 	<string name="error_bluetooth">Bluetooth error %1$s</string>
 
 	<!-- additional Hive strings -->
-	<string name="app_name">hive-mockup1</string>
 	<string name="action_settings">Settings</string>
 	<string name="hello_world">Hello world!</string>
 	<string name="contact_photo">Contact photo</string>
