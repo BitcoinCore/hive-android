@@ -39,9 +39,9 @@
 	<string name="wallet_options_safety_menu">Safety</string>
 	<string name="wallet_options_safety">Safety notes</string>
 	<string name="wallet_options_donate">Tip / Donate</string>
-	<string name="wallet_donate_address_label">Donation for Bitcoin Wallet</string>
+	<string name="wallet_donate_address_label">Donation for Hive</string>
 	<string name="wallet_low_storage_dialog_title">Internal Device Storage Space Low!</string>
-	<string name="wallet_low_storage_dialog_msg">Bitcoin Wallet uses internal storage for remembering transactions and blocks. If it runs out of space, it will stop working and your Bitcoins will be at risk!\n\nDo you want to open the Application Manager to uninstall unneeded apps?</string>
+	<string name="wallet_low_storage_dialog_msg">Hive uses internal storage for remembering transactions and blocks. If it runs out of space, it will stop working and your bitcoins will be at risk!\n\nDo you want to open the Application Manager to uninstall unneeded apps?</string>
 	<string name="wallet_low_storage_dialog_button_apps">Manage Apps</string>
 	<string name="wallet_timeskew_dialog_title">Check your time settings!</string>
 	<string name="wallet_timeskew_dialog_msg">Your device time is off by %d minutes. You probably cannot send or receive bitcoins due to this problem.\n\nYou should check and correct your time and timezone settings.</string>
@@ -51,7 +51,7 @@
 	<string name="wallet_version_dialog_button_market">Google Play</string>
 	<string name="wallet_version_dialog_button_binary">Download</string>
 	<string name="wallet_old_sdk_dialog_title">Android version is out of date</string>
-	<string name="wallet_old_sdk_dialog_message">Chances are that one of the next releases of Bitcoin Wallet will not support your device any more. In some cases, it can get difficult to spend coins on this device.\n\nUnless you know what you are doing, it is recommended to move out your coins soon.</string>
+	<string name="wallet_old_sdk_dialog_message">Chances are that one of the next releases of Hive will not support your device any more. In some cases, it can get difficult to spend coins on this device.\n\nUnless you know what you are doing, it is recommended to move out your coins soon.</string>
 	<string name="send_coins_activity_title">Send bitcoins</string>
 	<string name="send_coins_fragment_request_payment_request_progress">Fetching signature from %s…</string>
 	<string name="send_coins_fragment_request_payment_request_failed_title">Fetching signature failed</string>
@@ -156,7 +156,7 @@
 	<string name="export_keys_dialog_success"><![CDATA[<p>Your wallet has been backed up to <tt>%s</tt></p><p>If your device has a removable SD card, your backup <i>should</i> be on that card. Remove it and keep it at a safe place. If the card is <i>not</i> removable, you need to archive your backup to some other place than your device.</p><p><b>If the only place your backup exists is on your device, you run the risk of losing both at the same time!</b></p><p>In any case, make sure you remember your backup password. Do you want to archive your wallet now?</p>]]></string>
 	<string name="export_keys_dialog_failure">Your wallet could not be backed up:\n%s</string>
 	<string name="export_keys_dialog_button_archive">Archive</string>
-	<string name="export_keys_dialog_mail_subject">Bitcoin Wallet backup</string>
+	<string name="export_keys_dialog_mail_subject">Hive backup</string>
 	<string name="export_keys_dialog_mail_text">The attached encrypted file contains Bitcoin private keys and should be kept safe at all times. Don\'t forget the encryption password!</string>
 	<string name="export_keys_dialog_mail_intent_chooser">Archive wallet using…</string>
 	<string name="export_keys_dialog_mail_intent_failed">Archiving wallet failed.</string>
