@@ -26,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class ContactsFragment extends SherlockFragment implements LoaderCallbacks<Cursor>
 {
@@ -129,6 +130,9 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 						
 		contactsListView = (ListView) getActivity().findViewById(R.id.lv_contacts);
 		contactsListView.setAdapter(contactsSimpleCursorAdapter);
+		
+		TextView noContactsTextView = (TextView) getActivity().findViewById(R.id.tv_no_contacts);
+		contactsListView.setEmptyView(noContactsTextView);
 		
 		getActivity().getSupportLoaderManager().initLoader(0, null, this);
 	}
