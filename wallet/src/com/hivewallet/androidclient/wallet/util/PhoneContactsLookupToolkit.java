@@ -118,7 +118,9 @@ public class PhoneContactsLookupToolkit implements LoaderCallbacks<Cursor>
 			Uri uri = null;
 			if (cursor.moveToNext()) {
 				int cIdx = cursor.getColumnIndexOrThrow(Contacts.PHOTO_URI);
-				uri = Uri.parse(cursor.getString(cIdx));
+				String uriString = cursor.getString(cIdx);
+				if (uriString != null)
+					uri = Uri.parse(uriString);
 			}
 			
 			cursor.close();
