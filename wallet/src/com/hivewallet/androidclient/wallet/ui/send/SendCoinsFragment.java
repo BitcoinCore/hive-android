@@ -1157,6 +1157,7 @@ public final class SendCoinsFragment extends SherlockFragment
 
 				sentTransactionView.setVisibility(View.VISIBLE);
 				sentTransactionListAdapter.setPrecision(btcPrecision, btcShift);
+				sentTransactionListAdapter.setCurrencyCode(config.getBtcPrefix());
 				sentTransactionListAdapter.replace(sentTransaction);
 			}
 			else
