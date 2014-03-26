@@ -56,7 +56,7 @@ public class AddContactActivity extends SherlockFragmentActivity implements Load
 		bitcoinAddressEditText = (EditText)findViewById(R.id.et_bitcoin_address);
 
 		phoneContactsLookupToolkit = new PhoneContactsLookupToolkit(this,
-				android.R.layout.simple_dropdown_item_1line, android.R.id.text1);		
+				android.R.layout.simple_list_item_1, android.R.id.text1);		
 		contactNameAutoCompleteTextView.setThreshold(1);
 		contactNameAutoCompleteTextView.setAdapter(phoneContactsLookupToolkit.getAdapter());
 		getSupportLoaderManager().initLoader(0, null, this);

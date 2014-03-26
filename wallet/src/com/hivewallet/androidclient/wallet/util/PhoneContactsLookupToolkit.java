@@ -2,6 +2,7 @@ package com.hivewallet.androidclient.wallet.util;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -126,8 +127,26 @@ public class PhoneContactsLookupToolkit implements LoaderCallbacks<Cursor>
 			cursor.close();
 			return uri;
 		} else {
-			// Contact picture lookup not implement for pre-Honeycomb
-			return null;
+			String[] projection = { Contacts._ID };
+			Cursor cursor = contentResolver.query
+				( Contacts.CONTENT_URI
+				, projection
+				, Contacts.DISPLAY_NAME + " LIKE ?"
+				, new String[] { label }
+				, null
+				);
+			
+			Uri uri = null;
+			if (cursor.moveToNext()) {
+				int cIdx = cursor.getColumnIndexOrThrow(Contacts._ID);
+				int contactId = cursor.getInt(cIdx);
+				
+	    		Uri baseUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, contactId);
+	    		uri = Uri.withAppendedPath(baseUri, Contacts.Photo.CONTENT_DIRECTORY);
+			}
+			
+			cursor.close();
+			return uri;
 		}
 	}
 }
