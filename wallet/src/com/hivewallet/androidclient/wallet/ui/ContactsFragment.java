@@ -134,7 +134,7 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 		TextView noContactsTextView = (TextView) getActivity().findViewById(R.id.tv_no_contacts);
 		contactsListView.setEmptyView(noContactsTextView);
 		
-		getActivity().getSupportLoaderManager().initLoader(0, null, this);
+		getLoaderManager().initLoader(0, null, this);
 	}
 	
 	@Override
