@@ -221,6 +221,8 @@
 	<string name="about_market_app_summary">Review or rate the app</string>
 	<string name="about_credits_market_publisher_title">Other apps from the author</string>
 	<string name="notification_coins_received_msg">Received %s</string>
+	<string name="notification_coins_received_with_label_msg">Received %1$s from %2$s</string>
+	<string name="notification_coins_received_no_address">Bitcoin payment</string>
 	<string name="notification_peers_connected_msg">%d peers connected</string>
 
 	<!-- generic buttons -->

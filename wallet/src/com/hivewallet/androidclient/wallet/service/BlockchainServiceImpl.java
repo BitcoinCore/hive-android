@@ -18,6 +18,7 @@
 package com.hivewallet.androidclient.wallet.service;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -49,6 +50,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Binder;
@@ -56,6 +58,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.provider.MediaStore;
 import android.support.v4.app.NotificationCompat;
 import android.text.format.DateUtils;
 
@@ -90,6 +93,7 @@ import com.hivewallet.androidclient.wallet.WalletBalanceWidgetProvider;
 import com.hivewallet.androidclient.wallet.ui.WalletActivity;
 import com.hivewallet.androidclient.wallet.util.CrashReporter;
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
+import com.hivewallet.androidclient.wallet.util.PhoneContactsLookupToolkit;
 import com.hivewallet.androidclient.wallet.util.ThrottlingWalletChangeListener;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
 import com.hivewallet.androidclient.wallet_test.R;
@@ -117,9 +121,6 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 	private static final int NOTIFICATION_ID_CONNECTED = 0;
 	private static final int NOTIFICATION_ID_COINS_RECEIVED = 1;
 
-	private int notificationCount = 0;
-	private BigInteger notificationAccumulatedAmount = BigInteger.ZERO;
-	private final List<Address> notificationAddresses = new LinkedList<Address>();
 	private AtomicInteger transactionsReceived = new AtomicInteger();
 	private int bestChainHeightEver;
 	private long serviceCreatedAt;
@@ -176,48 +177,62 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 
 	private void notifyCoinsReceived(@Nullable final Address from, @Nonnull final BigInteger amount)
 	{
-		if (notificationCount == 1)
-			nm.cancel(NOTIFICATION_ID_COINS_RECEIVED);
-
-		notificationCount++;
-		notificationAccumulatedAmount = notificationAccumulatedAmount.add(amount);
-		if (from != null && !notificationAddresses.contains(from))
-			notificationAddresses.add(from);
-
 		final int btcPrecision = config.getBtcPrecision();
 		final int btcShift = config.getBtcShift();
 		final String btcPrefix = config.getBtcPrefix();
 
 		final String packageFlavor = application.applicationPackageFlavor();
 		final String msgSuffix = packageFlavor != null ? " [" + packageFlavor + "]" : "";
-
-		final String tickerMsg = getString(R.string.notification_coins_received_msg,
-				btcPrefix + ' ' + GenericUtils.formatValue(amount, btcPrecision, btcShift))
-				+ msgSuffix;
-
-		final String msg = getString(R.string.notification_coins_received_msg,
-				btcPrefix + ' ' + GenericUtils.formatValue(notificationAccumulatedAmount, btcPrecision, btcShift))
-				+ msgSuffix;
-
-		final StringBuilder text = new StringBuilder();
-		for (final Address address : notificationAddresses)
-		{
-			if (text.length() > 0)
-				text.append(", ");
-
-			final String addressStr = address.toString();
-			final String label = AddressBookProvider.resolveLabel(getApplicationContext(), addressStr);
-			text.append(label != null ? label : addressStr);
+		
+		String label = null;
+		Uri photoUri = null;
+		Bitmap photoBitmap = null;
+		if (from != null) {
+			final String addressStr = from.toString();
+			label = AddressBookProvider.resolveLabel(getApplicationContext(), addressStr);
+			if (label != null)
+				photoUri = PhoneContactsLookupToolkit.lookupPhoneContactPicture(getContentResolver(), label);
+			if (photoUri != null) {
+				try
+				{
+					Bitmap photoBitmapOriginal = MediaStore.Images.Media.getBitmap(getContentResolver(), photoUri);
+					int width = (int)getResources().getDimension(android.R.dimen.notification_large_icon_width);
+					int height = (int)getResources().getDimension(android.R.dimen.notification_large_icon_height);
+					photoBitmap = Bitmap.createScaledBitmap(photoBitmapOriginal, width, height, false);
+				}
+				catch (FileNotFoundException ignored) {}
+				catch (IOException ignored) {}
+			}
 		}
+		
+		final StringBuilder tickerMsg = new StringBuilder();
+		if (label != null)
+			tickerMsg.append(getString(R.string.notification_coins_received_with_label_msg,
+					GenericUtils.formatValue(amount, btcPrecision, btcShift)  + ' ' + btcPrefix, label));
+		else
+			tickerMsg.append(getString(R.string.notification_coins_received_msg,
+					GenericUtils.formatValue(amount, btcPrecision, btcShift)  + ' ' + btcPrefix));
+		tickerMsg.append(msgSuffix);
+		
+		String contentTitle = getString(R.string.notification_coins_received_no_address);
+		if (from != null)
+			contentTitle = from.toString();
+		if (label != null)
+			contentTitle = label;
+		
+		final String contentText = getString(R.string.notification_coins_received_msg,
+				GenericUtils.formatValue(amount, btcPrecision, btcShift)  + ' ' + btcPrefix)
+				+ msgSuffix;
 
 		final NotificationCompat.Builder notification = new NotificationCompat.Builder(this);
-		notification.setSmallIcon(R.drawable.stat_notify_received);
+		notification.setSmallIcon(R.drawable.app_icon);
 		notification.setTicker(tickerMsg);
-		notification.setContentTitle(msg);
-		if (text.length() > 0)
-			notification.setContentText(text);
+		if (photoBitmap != null)
+			notification.setLargeIcon(photoBitmap);
+		notification.setContentTitle(contentTitle);
+		notification.setContentText(contentText);
 		notification.setContentIntent(PendingIntent.getActivity(this, 0, new Intent(this, WalletActivity.class), 0));
-		notification.setNumber(notificationCount == 1 ? 0 : notificationCount);
+		notification.setNumber(0);
 		notification.setWhen(System.currentTimeMillis());
 		notification.setSound(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.coins_received));
 		nm.notify(NOTIFICATION_ID_COINS_RECEIVED, notification.getNotification());
@@ -671,10 +686,6 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 
 			if (BlockchainService.ACTION_CANCEL_COINS_RECEIVED.equals(action))
 			{
-				notificationCount = 0;
-				notificationAccumulatedAmount = BigInteger.ZERO;
-				notificationAddresses.clear();
-
 				nm.cancel(NOTIFICATION_ID_COINS_RECEIVED);
 			}
 			else if (BlockchainService.ACTION_RESET_BLOCKCHAIN.equals(action))
