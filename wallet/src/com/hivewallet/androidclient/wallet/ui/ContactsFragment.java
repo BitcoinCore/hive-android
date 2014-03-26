@@ -1,8 +1,11 @@
 package com.hivewallet.androidclient.wallet.ui;
 
+import javax.annotation.Nullable;
+
 import com.actionbarsherlock.app.SherlockFragment;
 import com.google.bitcoin.core.AddressFormatException;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
+import com.hivewallet.androidclient.wallet.ui.TransactionsListFragment.Direction;
 import com.hivewallet.androidclient.wallet.util.PhoneContactPictureLookupService;
 import com.hivewallet.androidclient.wallet_test.R;
 
@@ -37,7 +40,12 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 	
 	private SimpleCursorAdapter contactsSimpleCursorAdapter;
 	
-	private int photoTagCounter = 0; 
+	private int photoTagCounter = 0;
+	
+	public static ContactsFragment instance()
+	{
+		return new ContactsFragment();
+	}
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

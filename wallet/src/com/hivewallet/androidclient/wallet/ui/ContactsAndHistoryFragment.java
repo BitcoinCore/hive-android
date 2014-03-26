@@ -4,14 +4,21 @@ import com.actionbarsherlock.app.SherlockFragment;
 import com.hivewallet.androidclient.wallet_test.R;
 
 import android.os.Bundle;
-import android.support.v4.app.FragmentTabHost;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import com.viewpagerindicator.MyTabPageIndicator;
+import com.viewpagerindicator.IconPagerAdapter;
 
 public class ContactsAndHistoryFragment extends SherlockFragment
 {
-	FragmentTabHost chFragmentTabHost;
+	private CAHFragmentPagerAdapter cahFragmentPagerAdapter;
+	private ViewPager viewPager;
+	private MyTabPageIndicator myTabPageIndicator;
 
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
@@ -23,16 +30,57 @@ public class ContactsAndHistoryFragment extends SherlockFragment
 	{
 		super.onActivityCreated(savedInstanceState);
 
-		chFragmentTabHost = (FragmentTabHost)getActivity().findViewById(android.R.id.tabhost);
-		chFragmentTabHost.setup(getActivity(), getChildFragmentManager(), android.R.id.tabcontent);
+		cahFragmentPagerAdapter = new CAHFragmentPagerAdapter(getFragmentManager());
 
-		chFragmentTabHost.addTab(chFragmentTabHost.newTabSpec("contacts").setIndicator(
-				"", getResources().getDrawable(R.drawable.ic_menu_allfriends)),
-				ContactsFragment.class, null);
+		viewPager = (ViewPager)getActivity().findViewById(R.id.vp_tabs);
+		viewPager.setAdapter(cahFragmentPagerAdapter);
 
-		chFragmentTabHost.addTab(chFragmentTabHost.newTabSpec("history").setIndicator(
-				"", getResources().getDrawable(R.drawable.ic_menu_recent_history)),
-				TransactionsListFragment.class, null);
+		myTabPageIndicator = (MyTabPageIndicator)getActivity().findViewById(R.id.tpi_tabs);
+		myTabPageIndicator.setViewPager(viewPager);
+	}
 
+	private static class CAHFragmentPagerAdapter extends FragmentPagerAdapter implements IconPagerAdapter {
+		private static final int NUM_FRAGMENTS = 2;
+
+		public CAHFragmentPagerAdapter(FragmentManager fm)
+		{
+			super(fm);
+		}
+
+		@Override
+		public int getCount()
+		{
+			return NUM_FRAGMENTS;
+		}		
+
+		@Override
+		public Fragment getItem(int index)
+		{
+			switch (index) {
+				case 0:
+					return ContactsFragment.instance();
+				case 1:
+					return TransactionsListFragment.instance(null);
+				default:
+					throw new IllegalArgumentException("Unknown fragment index");
+			}
+		}
+
+		@Override
+		public CharSequence getPageTitle(int index) {
+			return "";
+		}
+
+		@Override
+		public int getIconResId(int index) {
+			switch (index) {
+				case 0:
+					return R.drawable.ic_menu_allfriends;
+				case 1:
+					return R.drawable.ic_menu_recent_history;
+				default:
+					throw new IllegalArgumentException("Unknown fragment index");
+			}			
+		}
 	}
 }
