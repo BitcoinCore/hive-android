@@ -18,6 +18,8 @@
 package com.hivewallet.androidclient.wallet;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 
@@ -28,6 +30,9 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.text.format.DateUtils;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 
 /**
@@ -53,6 +58,7 @@ public class Configuration
 	private static final String PREFS_KEY_BEST_CHAIN_HEIGHT_EVER = "best_chain_height_ever";
 	private static final String PREFS_KEY_CACHED_EXCHANGE_CURRENCY = "cached_exchange_currency";
 	private static final String PREFS_KEY_CACHED_EXCHANGE_RATE = "cached_exchange_rate";
+	private static final String PREFS_KEY_CACHED_EXCHANGE_CURRENCIES = "cached_exchange_currencies";
 	private static final String PREFS_KEY_LAST_EXCHANGE_DIRECTION = "last_exchange_direction";
 	private static final String PREFS_KEY_CHANGE_LOG_VERSION = "change_log_version";
 	public static final String PREFS_KEY_REMIND_BACKUP = "remind_backup";
@@ -241,6 +247,26 @@ public class Configuration
 		edit.putString(PREFS_KEY_CACHED_EXCHANGE_CURRENCY, cachedExchangeRate.currencyCode);
 		edit.putLong(PREFS_KEY_CACHED_EXCHANGE_RATE, cachedExchangeRate.rate.longValue());
 		edit.commit();
+	}
+	
+	public List<String> getCachedExchangeCurrencies()
+	{
+		List<String> currencies = new ArrayList<String>();
+		final String currenciesStr = prefs.getString(PREFS_KEY_CACHED_EXCHANGE_CURRENCIES, "");
+		
+		for (String currency : Splitter.on(',').split(currenciesStr))
+		{
+			if (!currency.isEmpty())
+				currencies.add(currency);
+		}
+		
+		return currencies;
+	}
+	
+	public void setCachedExchangeCurrencies(Iterable<String> currencies)
+	{
+		final String currenciesStr = Joiner.on(',').join(currencies);
+		prefs.edit().putString(PREFS_KEY_CACHED_EXCHANGE_CURRENCIES, currenciesStr).commit();
 	}
 
 	public boolean getLastExchangeDirection()

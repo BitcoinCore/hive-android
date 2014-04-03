@@ -128,6 +128,18 @@ public class GenericUtils
 			throw new IllegalArgumentException("cannot handle shift: " + shift);
 		}
 	}
+	
+	public static BigInteger parseValue(String value, int shift)
+	{
+		try {
+			double dAmount = Double.parseDouble(value);
+			int factor = ONE_BTC_INT / (int)Math.pow(10, shift);
+			long amount = Math.round(dAmount * factor);
+			return BigInteger.valueOf(amount);
+		} catch (NumberFormatException e) {
+			return BigInteger.ZERO;
+		}		
+	}
 
 	public static String formatDebugValue(@Nonnull final BigInteger value)
 	{

@@ -1,0 +1,14 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	tools:context=".AppPlatformActivity" >
+
+	<fragment
+		android:id="@+id/f_app_platform"
+		android:name="com.hivewallet.androidclient.wallet.ui.AppPlatformFragment"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent" />
+
+</LinearLayout>

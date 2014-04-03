@@ -195,6 +195,15 @@ public final class PaymentIntent implements Parcelable
 	{
 		return new PaymentIntent(new Address(Constants.NETWORK_PARAMETERS, address), addressLabel);
 	}
+	
+	public static PaymentIntent fromAddressAndAmount(@Nonnull final Address address, @Nullable final BigInteger amount)
+	{
+		final Output[] outputs = buildSimplePayTo(amount, address);
+		
+		return new PaymentIntent(PaymentIntent.Standard.BIP21, null, null, null, outputs, null, null,
+				null, null);
+	}
+	
 
 	public static PaymentIntent fromBitcoinUri(@Nonnull final BitcoinURI bitcoinUri)
 	{

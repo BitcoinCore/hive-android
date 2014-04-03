@@ -17,9 +17,13 @@
 
 package com.hivewallet.androidclient.wallet.util;
 
+import static net.java.quickcheck.generator.PrimitiveGenerators.fixedValues;
+import static net.java.quickcheck.generator.PrimitiveGenerators.longs;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
+
+import net.java.quickcheck.generator.iterable.Iterables;
 
 import org.junit.Test;
 
@@ -98,5 +102,31 @@ public class GenericUtilsTest
 		assertEquals("11223344556677.88", GenericUtils.formatValue(value, 2, 6));
 
 		assertEquals("21000000000000", GenericUtils.formatValue(NetworkParameters.MAX_MONEY, 2, 6));
+	}
+	
+	@Test
+	public void formatAndParseShouldAgree()
+	{
+		int shift = fixedValues(0, 3, 6).next();
+		int precision;
+		
+		switch (shift) {
+			case 3:
+				precision = 5;
+				break;
+			case 6:
+				precision = 2;
+				break;
+			default:
+				precision = 8;
+		}
+		
+		for (long value : Iterables.toIterable(longs(0L, NetworkParameters.MAX_MONEY.longValue())))
+		{
+			String valueStr = GenericUtils.formatValue(BigInteger.valueOf(value), precision, shift);
+			long valueParsed = GenericUtils.parseValue(valueStr, shift).longValue();
+			assertEquals("Shift: " + shift + "; precision: " + precision
+					+ "; intermediate state was: " + valueStr, value, valueParsed);
+		}
 	}
 }

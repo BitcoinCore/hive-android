@@ -161,6 +161,8 @@ public class ExchangeRatesProvider extends ContentProvider
 				final ExchangeRate exchangeRateToCache = bestExchangeRate(config.getExchangeCurrencyCode());
 				if (exchangeRateToCache != null)
 					config.setCachedExchangeRate(exchangeRateToCache);
+				
+				config.setCachedExchangeCurrencies(newExchangeRates.keySet());
 			}
 		}
 
@@ -215,7 +217,7 @@ public class ExchangeRatesProvider extends ContentProvider
 		return exchangeRates.get(Constants.DEFAULT_EXCHANGE_CURRENCY);
 	}
 
-	private String defaultCurrencyCode()
+	public static String defaultCurrencyCode()
 	{
 		try
 		{

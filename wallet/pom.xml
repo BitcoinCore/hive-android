@@ -152,6 +152,14 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- net.java.quickcheck.* -->
+		<dependency>
+			<groupId>net.java.quickcheck</groupId>
+			<artifactId>quickcheck</artifactId>
+			<version>0.6</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<profiles>

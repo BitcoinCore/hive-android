@@ -22,6 +22,11 @@
 		android:title="@string/button_scan"
 		android:visible="@bool/wallet_actions_top"/>
 	<item
+		android:id="@+id/wallet_options_app_platform"
+		android:icon="@drawable/icon_box"
+		android:showAsAction="ifRoom|withText"
+		android:title="@string/app_platform"/>
+	<item
 		android:id="@+id/wallet_options_address_book"
 		android:icon="@drawable/ic_action_labels"
 		android:showAsAction="ifRoom|withText"

@@ -187,6 +187,11 @@
 			android:configChanges="orientation"
 			android:screenOrientation="portrait"
 			android:label="@string/add_contact" />
+		<activity
+			android:name="com.hivewallet.androidclient.wallet.ui.AppPlatformActivity"
+			android:configChanges="orientation"
+			android:screenOrientation="portrait"
+			android:label="@string/app_platform" />		
 
 		<provider
 			android:name="com.hivewallet.androidclient.wallet.AddressBookProvider"
