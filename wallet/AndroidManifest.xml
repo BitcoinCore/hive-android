@@ -191,6 +191,11 @@
 			android:name="com.hivewallet.androidclient.wallet.ui.AppPlatformActivity"
 			android:configChanges="orientation"
 			android:screenOrientation="portrait"
+			android:label="@string/app_platform" />
+		<activity
+			android:name="com.hivewallet.androidclient.wallet.ui.AppRunnerActivity"
+			android:configChanges="orientation"
+			android:screenOrientation="portrait"
 			android:label="@string/app_platform" />		
 
 		<provider

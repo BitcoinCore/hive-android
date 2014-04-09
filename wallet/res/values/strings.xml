@@ -288,4 +288,5 @@
 	<string name="tx_fee">Fee:</string>
 	<string name="no_contacts_yet">Welcome to Hive!\nYou are now ready to\nreceive bitcoins - have fun!</string>
 	<string name="app_platform">Apps</string>
+	<string name="app_icon">App icon</string>
 </resources>
