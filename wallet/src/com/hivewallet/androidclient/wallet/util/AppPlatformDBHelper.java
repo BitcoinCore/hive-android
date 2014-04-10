@@ -14,7 +14,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-public class AppManifestDBHelper extends SQLiteOpenHelper
+public class AppPlatformDBHelper extends SQLiteOpenHelper
 {
 	public static final String KEY_ROWID = "_id";
 	public static final String KEY_ID = "id";
@@ -56,7 +56,7 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 	private static final String TABLE_CREATE_IDX =
 			"CREATE INDEX " + TABLE_NAME + "_idx1 on " + TABLE_NAME + " (" + KEY_ID + ")";
 	
-	public AppManifestDBHelper(final Context context)
+	public AppPlatformDBHelper(final Context context)
 	{
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
 	}

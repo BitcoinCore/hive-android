@@ -41,7 +41,7 @@ import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.integration.android.BitcoinIntegration;
 import com.hivewallet.androidclient.wallet.data.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.send.SendCoinsActivity;
-import com.hivewallet.androidclient.wallet.util.AppManifestDBHelper;
+import com.hivewallet.androidclient.wallet.util.AppPlatformDBHelper;
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
 import com.hivewallet.androidclient.wallet_test.R;
 
@@ -176,7 +176,7 @@ public class AppRunnerFragment extends Fragment
 		
 		private long lastSendMoneyCallbackId = -1;
 		
-		private AppManifestDBHelper appManifestDBHelper;
+		private AppPlatformDBHelper appPlatformDBHelper;
 		
 		public AppPlatformApi(Fragment fragment, WebView webView)
 		{
@@ -184,7 +184,7 @@ public class AppRunnerFragment extends Fragment
 			this.config = application.getConfiguration();
 			this.fragment = fragment;
 			this.webView = webView;
-			this.appManifestDBHelper = new AppManifestDBHelper(application);
+			this.appPlatformDBHelper = new AppPlatformDBHelper(application);
 		}
 		
 		@SuppressWarnings("unused")
@@ -294,7 +294,7 @@ public class AppRunnerFragment extends Fragment
 		public void getApplication(long callbackId, String appId) {
 			log.info("in getApplication with id: " + appId);
 			
-			Map<String, String> manifest = appManifestDBHelper.getAppManifest(appId);
+			Map<String, String> manifest = appPlatformDBHelper.getAppManifest(appId);
 			
 			if (manifest == null) {
 				log.info("in getApplication: will return null");

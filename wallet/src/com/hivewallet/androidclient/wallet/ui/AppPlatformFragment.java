@@ -17,7 +17,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 
-import com.hivewallet.androidclient.wallet.util.AppManifestDBHelper;
+import com.hivewallet.androidclient.wallet.util.AppPlatformDBHelper;
 import com.hivewallet.androidclient.wallet_test.R;
 import com.squareup.picasso.Picasso;
 
@@ -31,7 +31,7 @@ public class AppPlatformFragment extends Fragment
 	private SimpleCursorAdapter appsAdapter;
 	private ListView appsListView;
 	
-	private AppManifestDBHelper appManifestDBHelper;
+	private AppPlatformDBHelper appPlatformDBHelper;
 	
 	public AppPlatformFragment() { /* required default constructor */ }
 	
@@ -40,7 +40,7 @@ public class AppPlatformFragment extends Fragment
 	{
 		super.onAttach(activity);
 		
-		this.appManifestDBHelper = new AppManifestDBHelper(activity);
+		this.appPlatformDBHelper = new AppPlatformDBHelper(activity);
 	}
 	
 	@Override
@@ -76,7 +76,7 @@ public class AppPlatformFragment extends Fragment
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id)
 	{
 		Cursor cursor = (Cursor)parent.getItemAtPosition(position);
-		String appId = cursor.getString(cursor.getColumnIndexOrThrow(AppManifestDBHelper.KEY_ID));
+		String appId = cursor.getString(cursor.getColumnIndexOrThrow(AppPlatformDBHelper.KEY_ID));
 		String appBase = APP_BASE_PREFIX + appId + "/";
 		
 		AppRunnerActivity.start(getActivity(), appBase);
@@ -85,7 +85,7 @@ public class AppPlatformFragment extends Fragment
 	@Override
 	public Loader<Cursor> onCreateLoader(final int id, final Bundle args)
 	{
-		return appManifestDBHelper.getAllAppsCursorLoader(getActivity());
+		return appPlatformDBHelper.getAllAppsCursorLoader(getActivity());
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public class AppPlatformFragment extends Fragment
 	
 	private static class AppsAdapter extends SimpleCursorAdapter {
 		private static final String[] APPS_FROM_COLUMNS =
-			{ AppManifestDBHelper.KEY_ICON, AppManifestDBHelper.KEY_NAME, AppManifestDBHelper.KEY_DESCRIPTION };
+			{ AppPlatformDBHelper.KEY_ICON, AppPlatformDBHelper.KEY_NAME, AppPlatformDBHelper.KEY_DESCRIPTION };
 		private static final int[] APPS_TO_IDS =
 			{ R.id.iv_app_icon, R.id.tv_app_name, R.id.tv_app_description };
 		
