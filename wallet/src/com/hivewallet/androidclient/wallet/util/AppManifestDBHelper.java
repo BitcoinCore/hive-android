@@ -20,6 +20,7 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 	public static final String KEY_ACCESSEDHOSTS = "accessed_hosts";
 	public static final String KEY_APIVERSIONMAJOR = "api_version_major";
 	public static final String KEY_APIVERSIONMINOR = "api_version_minor";
+	public static final String KEY_SORT_PRIORITY = "sort_priority";
 	
 	private static final String DATABASE_NAME = "manifests";
 	private static final int DATABASE_VERSION = 1;
@@ -36,7 +37,8 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 			+ KEY_ICON + " TEXT,"
 			+ KEY_ACCESSEDHOSTS + " TEXT,"
 			+ KEY_APIVERSIONMAJOR + " INTEGER,"
-			+ KEY_APIVERSIONMINOR + " INTEGER);";
+			+ KEY_APIVERSIONMINOR + " INTEGER,"
+			+ KEY_SORT_PRIORITY + " INTEGER);";
 	private static final String TABLE_CREATE_IDX =
 			"CREATE INDEX " + TABLE_NAME + "_idx1 on " + TABLE_NAME + " (" + KEY_ID + ")";
 	
@@ -62,6 +64,7 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 		firstEntry.put(KEY_AUTHOR, "Taylor Gerring");
 		firstEntry.put(KEY_DESCRIPTION, "Help us continue building Hive!");
 		firstEntry.put(KEY_ICON, "http://hive-app-registry.herokuapp.com/com.hivewallet.supporthive/icon.png");
+		firstEntry.put(KEY_SORT_PRIORITY, 2);
 		db.insert(TABLE_NAME, null, firstEntry);
 		
 		ContentValues secondEntry = new ContentValues();
@@ -71,6 +74,7 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 		secondEntry.put(KEY_AUTHOR, "Wei Lu");
 		secondEntry.put(KEY_DESCRIPTION, "A marketplace for Hive apps");
 		secondEntry.put(KEY_ICON, "https://raw.githubusercontent.com/hivewallet/app-store/master/images/logo.png");
+		secondEntry.put(KEY_SORT_PRIORITY, 1);
 		db.insert(TABLE_NAME, null, secondEntry);
 	}
 
@@ -81,6 +85,7 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 	}
 	
 	public SQLiteCursorLoader getAllAppsCursorLoader(Context context) {
-		return new SQLiteCursorLoader(context, this, "select * from " + TABLE_NAME, null);
+		return new SQLiteCursorLoader(context, this,
+				"select * from " + TABLE_NAME + " order by " + KEY_SORT_PRIORITY, null);
 	}
 }
