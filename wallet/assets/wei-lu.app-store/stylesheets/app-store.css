@@ -1,0 +1,67 @@
+nav{
+  background: url(../images/header_bg.png);
+  width: 100%;
+  line-height: 45px;
+  padding-left: 15px;
+  padding-right: 15px;
+  color: white;
+  font-weight: bold;
+}
+
+nav img {
+  width: 30px;
+}
+
+.media img {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.media-body, .media-heading {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.media-heading {
+  white-space: nowrap;
+  margin: 0;
+  padding-bottom: 2px;
+}
+
+.media-body {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 16px;     /* fallback */
+  max-height: 4em;      /* fallback */
+}
+
+.list-group-item.row {
+  padding: 15px;
+}
+
+.list-group-item.row button {
+  min-width: 75px;
+}
+
+.btn.btn-empty {
+  background: transparent;
+}
+
+.spinner-container {
+  margin-top: 50px;
+}
+
+.spinner {
+  font-size: 30px;
+  -webkit-animation-name: rotateThis;
+  -webkit-animation-duration: 1s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: linear;
+}
+
+@-webkit-keyframes "rotateThis" {
+  from { -webkit-transform: scale( 1 ) rotate( 0deg );   }
+  to   { -webkit-transform: scale( 1 ) rotate( 360deg ); }
+}
+

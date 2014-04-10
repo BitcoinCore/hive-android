@@ -4,7 +4,6 @@ import com.commonsware.cwac.loaderex.acl.SQLiteCursorLoader;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -64,6 +63,15 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 		firstEntry.put(KEY_DESCRIPTION, "Help us continue building Hive!");
 		firstEntry.put(KEY_ICON, "http://hive-app-registry.herokuapp.com/com.hivewallet.supporthive/icon.png");
 		db.insert(TABLE_NAME, null, firstEntry);
+		
+		ContentValues secondEntry = new ContentValues();
+		secondEntry.put(KEY_ID, "wei-lu.app-store");
+		secondEntry.put(KEY_VERSION, "1.1.1");
+		secondEntry.put(KEY_NAME, "App Store");
+		secondEntry.put(KEY_AUTHOR, "Wei Lu");
+		secondEntry.put(KEY_DESCRIPTION, "A marketplace for Hive apps");
+		secondEntry.put(KEY_ICON, "https://raw.githubusercontent.com/hivewallet/app-store/master/images/logo.png");
+		db.insert(TABLE_NAME, null, secondEntry);
 	}
 
 	@Override
