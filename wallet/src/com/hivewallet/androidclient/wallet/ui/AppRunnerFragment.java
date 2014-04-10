@@ -50,7 +50,7 @@ public class AppRunnerFragment extends Fragment
 {
 	private static final Logger log = LoggerFactory.getLogger(AppRunnerFragment.class);
 	private static final int REQUEST_CODE_SEND_MONEY = 0;
-	private static final String HIVE_ANDROID_APP_PLATFORM_JS = "hive_android_app_platform.js";
+	private static final String HIVE_ANDROID_APP_PLATFORM_JS = "hive_android_app_platform.min.js";
 	private static final String ARGUMENT_APP_BASE = "app_base";
 	
 	private WebView webView;
