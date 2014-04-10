@@ -1,15 +1,26 @@
 package com.hivewallet.androidclient.wallet.util;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.commonsware.cwac.loaderex.acl.SQLiteCursorLoader;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -17,6 +28,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class AppPlatformDBHelper extends SQLiteOpenHelper
 {
 	public static final String APP_STORE_ID = "wei-lu.app-store";
+	public static final String APP_STORE_MANIFEST = "wei-lu.app-store/manifest.json";
+	public static final String APP_STORE_ICON = "file:///android_asset/wei-lu.app-store/images/logo.png";
 	
 	public static final String KEY_ROWID = "_id";
 	public static final String KEY_ID = "id";
@@ -35,6 +48,8 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 		{ KEY_ID, KEY_VERSION, KEY_NAME, KEY_AUTHOR, KEY_CONTACT, KEY_DESCRIPTION
 		, KEY_ICON, KEY_ACCESSEDHOSTS, KEY_APIVERSIONMAJOR, KEY_APIVERSIONMINOR
 		};
+	private static final String[] MINIMAL_MANIFEST_KEYS =
+		{ KEY_ID, KEY_VERSION, KEY_NAME, KEY_DESCRIPTION, KEY_ICON };
 	private static final Set<String> NON_TEXT_KEYS = new HashSet<String>(Arrays.asList(new String[] 
 		{ KEY_ROWID, KEY_APIVERSIONMAJOR, KEY_APIVERSIONMINOR, KEY_SORT_PRIORITY }));
 	
@@ -58,9 +73,13 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 	private static final String TABLE_CREATE_IDX =
 			"CREATE INDEX " + TABLE_NAME + "_idx1 on " + TABLE_NAME + " (" + KEY_ID + ")";
 	
+	private AssetManager assetManager;
+	
 	public AppPlatformDBHelper(final Context context)
 	{
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
+		
+		this.assetManager = context.getAssets();
 	}
 
 	@Override
@@ -68,20 +87,26 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 	{
 		db.execSQL(TABLE_CREATE);
 		db.execSQL(TABLE_CREATE_IDX);
-		insertAppStore(db);
+		
+		try {
+			insertAppStore(db);
+		}
+		catch (IOException e) {
+			throw new RuntimeException("Error while initializing app store", e);
+		}
+		catch (JSONException e)
+		{
+			throw new RuntimeException("Error while initializing app store", e);
+		}
 	}
 	
-	private void insertAppStore(SQLiteDatabase db)
+	private void insertAppStore(SQLiteDatabase db) throws IOException, JSONException
 	{
-		ContentValues values = new ContentValues();
-		values.put(KEY_ID, APP_STORE_ID);
-		values.put(KEY_VERSION, "1.1.1");
-		values.put(KEY_NAME, "App Store");
-		values.put(KEY_AUTHOR, "Wei Lu");
-		values.put(KEY_DESCRIPTION, "A marketplace for Hive apps");
-		values.put(KEY_ICON, "");
-		values.put(KEY_SORT_PRIORITY, 1);
-		db.insert(TABLE_NAME, null, values);
+		InputStream is = assetManager.open(APP_STORE_MANIFEST);
+		String manifestData = IOUtils.toString(is, Charset.defaultCharset());
+		JSONObject manifestJSON = new JSONObject(manifestData);
+		manifestJSON.put(KEY_ICON, APP_STORE_ICON);
+		addManifest(APP_STORE_ID, manifestJSON, db);
 	}
 
 	@Override
@@ -117,5 +142,41 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 		} else {
 			return null;
 		}
+	}
+	
+	public void addManifest(String appId, JSONObject manifest) {
+		SQLiteDatabase db = getWritableDatabase();
+		db.delete(TABLE_NAME, KEY_ID + " = ?", new String[] { appId });
+		
+		addManifest(appId, manifest, db);
+	}
+	
+	private void addManifest(String appId, JSONObject manifest, SQLiteDatabase db) {
+		ContentValues values = new ContentValues();
+		HashSet<String> validKeys = new HashSet<String>(Arrays.asList(MANIFEST_KEYS));
+		
+		@SuppressWarnings("unchecked")
+		Iterator<String> iter = manifest.keys();
+		while (iter.hasNext()) {
+			String key = iter.next();
+			if (!validKeys.contains(key))
+				continue;
+			
+			try {
+				if (NON_TEXT_KEYS.contains(key)) {
+					int value = manifest.getInt(key);
+					values.put(key, value);
+				} else {
+					String value = manifest.getString(key);
+					values.put(key, value);
+				}
+			} catch (JSONException e) { /* skip key */ };
+		}
+		values.put(KEY_SORT_PRIORITY, 100);
+		db.insert(TABLE_NAME, null, values);
+	}
+	
+	public static List<String> getMinimalManifestKeys() {
+		return Collections.unmodifiableList(Arrays.asList(MINIMAL_MANIFEST_KEYS));
 	}
 }

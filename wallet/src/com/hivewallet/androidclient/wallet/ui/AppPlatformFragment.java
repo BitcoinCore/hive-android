@@ -26,7 +26,6 @@ import com.squareup.picasso.Picasso;
 public class AppPlatformFragment extends Fragment
 								 implements LoaderManager.LoaderCallbacks<Cursor>, OnItemClickListener
 {
-	private static final String APP_BASE_PREFIX = "file:///android_asset/";
 	private static final int ID_APPS_LOADER = 0;
 	
 	private SimpleCursorAdapter appsAdapter;
@@ -79,9 +78,8 @@ public class AppPlatformFragment extends Fragment
 	{
 		Cursor cursor = (Cursor)parent.getItemAtPosition(position);
 		String appId = cursor.getString(cursor.getColumnIndexOrThrow(AppPlatformDBHelper.KEY_ID));
-		String appBase = APP_BASE_PREFIX + appId + "/";
 		
-		AppRunnerActivity.start(getActivity(), appBase);
+		AppRunnerActivity.start(getActivity(), appId);
 	}
 	
 	@Override
@@ -115,12 +113,31 @@ public class AppPlatformFragment extends Fragment
 			super(context, R.layout.app_platform_list_item, null, APPS_FROM_COLUMNS, APPS_TO_IDS, 0);
 			
 			this.context = context;
+			this.setViewBinder(viewBinder);
 		}
 		
-		@Override
-		public void setViewImage(ImageView imageView, String iconURL)
+		private ViewBinder viewBinder = new ViewBinder()
 		{
-			Picasso.with(context).load(iconURL).into(imageView);
-		}
+			@Override
+			public boolean setViewValue(View view, Cursor cursor, int columnIdx)
+			{
+				if (view.getId() == R.id.iv_app_icon) {
+					ImageView imageView = (ImageView)view;
+					String appId = cursor.getString(cursor.getColumnIndexOrThrow(AppPlatformDBHelper.KEY_ID));
+					String icon = cursor.getString(columnIdx);
+					
+					String appBase = AppRunnerFragment.getAppBase(context);
+					String iconPath = appBase + appId + "/" + icon;
+					
+					if (AppPlatformDBHelper.APP_STORE_ID.equals(appId))
+						iconPath = AppPlatformDBHelper.APP_STORE_ICON;
+					
+					Picasso.with(context).load(iconPath).into(imageView);
+					return true;
+		 		} else {
+					return false;
+				}
+			}
+		};
 	}
 }

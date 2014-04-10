@@ -1,22 +1,36 @@
 package com.hivewallet.androidclient.wallet.ui;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.io.FileUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.net.Uri;
@@ -51,17 +65,23 @@ public class AppRunnerFragment extends Fragment
 	private static final Logger log = LoggerFactory.getLogger(AppRunnerFragment.class);
 	private static final int REQUEST_CODE_SEND_MONEY = 0;
 	private static final String HIVE_ANDROID_APP_PLATFORM_JS = "hive_android_app_platform.min.js";
-	private static final String ARGUMENT_APP_BASE = "app_base";
+	private static final String ARGUMENT_APP_ID = "app_id";
+	private static final String APP_STORE_BASE = "file:///android_asset/";
+	private static final String APP_PLATFORM_FOLDER = "app_platform";
+	private static final String APP_PLATFORM_DOWNLOAD_FILE = "app.hiveapp";
+	private static final String APP_PLATFORM_UNPACK_FOLDER = "unpacked_app";
+	private static final String APP_PLATFORM_APP_FOLDER = "apps";
+	private static final String APP_PLATFORM_MANIFEST_FILE = "manifest.json";
 	
 	private WebView webView;
 	
 	private AppPlatformApi appPlatformApi;
 	
-	public static AppRunnerFragment newInstance(String appBase) {
+	public static AppRunnerFragment newInstance(String appId) {
 		AppRunnerFragment f = new AppRunnerFragment();
 		
 		Bundle args = new Bundle();
-		args.putString(ARGUMENT_APP_BASE, appBase);
+		args.putString(ARGUMENT_APP_ID, appId);
 		f.setArguments(args);
 		
 		return f;
@@ -76,9 +96,13 @@ public class AppRunnerFragment extends Fragment
 		if (args == null)
 			throw new IllegalArgumentException("This fragment requires arguments.");
 		
-		String appBase = args.getString(ARGUMENT_APP_BASE);
-		if (appBase == null)
-			throw new IllegalArgumentException("App base needs to be provided");
+		String appId = args.getString(ARGUMENT_APP_ID);
+		if (appId == null)
+			throw new IllegalArgumentException("App id needs to be provided");
+		
+		String appBase = AppRunnerFragment.getAppBase(getActivity()) + appId + "/";
+		if (AppPlatformDBHelper.APP_STORE_ID.equals(appId))
+			appBase = APP_STORE_BASE + appId + "/";		
 		
 		View view = inflater.inflate(R.layout.app_runner_fragment, container, false);
 		webView = (WebView)view.findViewById(R.id.wv_app_runner);
@@ -106,6 +130,20 @@ public class AppRunnerFragment extends Fragment
 			}
 		}
 	}
+	
+	@Override
+	public void onPause()
+	{
+		appPlatformApi.onPause();
+		
+		super.onPause();
+	}
+	
+	public static String getAppBase(Context context) {
+		File appPlatform = context.getDir(APP_PLATFORM_FOLDER, Context.MODE_PRIVATE);
+		File appsDir = new File(appPlatform, APP_PLATFORM_APP_FOLDER);
+		return "file://" + appsDir.getAbsolutePath() + "/";
+	}	
 	
 	private static class AppPlatformWebViewClient extends WebViewClient {
 		private Activity activity;
@@ -166,7 +204,7 @@ public class AppRunnerFragment extends Fragment
 		}
 	}
 	
-	private static class AppPlatformApi {
+	private static class AppPlatformApi implements AppInstallCallback {
 		private static final Logger log = LoggerFactory.getLogger(AppPlatformApi.class);
 		
 		private WalletApplication application;
@@ -174,9 +212,11 @@ public class AppRunnerFragment extends Fragment
 		private Fragment fragment;
 		private WebView webView;
 		
-		private long lastSendMoneyCallbackId = -1;
+		volatile private long lastSendMoneyCallbackId = -1;
+		volatile private long lastInstallAppCallbackId = -1;
 		
 		private AppPlatformDBHelper appPlatformDBHelper;
+		private AppInstaller appInstaller;
 		
 		public AppPlatformApi(Fragment fragment, WebView webView)
 		{
@@ -247,8 +287,6 @@ public class AppRunnerFragment extends Fragment
 		}
 		
 		public void sendMoney1(long callbackId, String addressStr, long amountLong) {
-			log.info("API: in sendMoney1 - " + addressStr + "; " + amountLong);
-			
 			Address address = null;
 			
 			try {
@@ -273,7 +311,6 @@ public class AppRunnerFragment extends Fragment
 		
 		@SuppressWarnings("unused")
 		public void sendMoney2(long callbackId, String addressStr) {
-			log.info("API: in sendMoney2");
 			sendMoney1(callbackId, addressStr, -1);
 		}
 		
@@ -292,18 +329,58 @@ public class AppRunnerFragment extends Fragment
 		
 		@SuppressWarnings("unused")
 		public void getApplication(long callbackId, String appId) {
-			log.info("in getApplication with id: " + appId);
-			
 			Map<String, String> manifest = appPlatformDBHelper.getAppManifest(appId);
 			
 			if (manifest == null) {
-				log.info("in getApplication: will return null");
 				performCallback(callbackId, "null");
 			} else {
-				log.info("in getApplication; will return:" + toJSDataStructure(manifest));
 				performCallback(callbackId, toJSDataStructure(manifest));
 			}
 		}
+		
+		@SuppressWarnings("unused")
+		public void installApp(long callbackId, String url) {
+			if (appInstaller != null) {
+				/* Concurrent install are not supported at the moment */
+				performCallback(callbackId, "'Another install is in progress'", "false");
+				return;
+			}
+			
+			lastInstallAppCallbackId = callbackId;
+			File dir = application.getDir(APP_PLATFORM_FOLDER, Context.MODE_PRIVATE);
+			appInstaller = new AppInstaller(url, dir, this);
+			appInstaller.start();
+		}
+		
+		@Override
+		public void installSuccessful(String appId, File unpackDir, File appDir, JSONObject manifest)
+		{
+			try
+			{
+				FileUtils.deleteQuietly(appDir);
+				FileUtils.moveDirectory(unpackDir, appDir);
+				appPlatformDBHelper.addManifest(appId, manifest);
+				
+				appInstaller = null;
+				if (lastInstallAppCallbackId != -1)
+					performCallback(lastInstallAppCallbackId, "null", "true");
+				lastInstallAppCallbackId = -1;
+			}
+			catch (IOException e)
+			{
+				log.info("Exception while finalizing installation: {}", e);
+				installFailed("Install failed");
+			}
+		}
+
+		@Override
+		public void installFailed(String errMsg)
+		{
+			appInstaller = null;
+			if (lastInstallAppCallbackId != -1)
+				performCallback(lastInstallAppCallbackId, "'" + errMsg + "'", "false");
+			lastInstallAppCallbackId = -1;
+		}		
 		
 		private void performCallback(long callbackId, String... arguments) {
 			if (arguments == null || arguments.length < 1)
@@ -321,6 +398,11 @@ public class AppRunnerFragment extends Fragment
 			});			
 		}
 		
+		public void onPause() {
+			if (appInstaller != null)
+				appInstaller.cancel();
+		}
+		
 		private static String toJSDataStructure(Map<String, String> entries) {
 			Map<String, String> ppEntries = new HashMap<String, String>();
 			for (Entry<String, String> entry : entries.entrySet()) {
@@ -330,5 +412,215 @@ public class AppRunnerFragment extends Fragment
 			String sEntries = Joiner.on(',').withKeyValueSeparator(":").join(ppEntries);
 			return "{" + sEntries + "}";
 		}
+		
+		private static class AppInstaller extends Thread {
+			private static final int BUFFER_SIZE = 4096;
+			
+			private String urlStr;
+			private AppInstallCallback callback;
+			private File dir;
+			volatile private boolean isRunning = true;
+			
+			public AppInstaller(String url, File dir, AppInstallCallback callback)
+			{
+				this.urlStr = url;
+				this.dir = dir;
+				this.callback = callback;
+			}
+			
+			public void cancel() {
+				this.isRunning = false;
+			}
+			
+			@Override
+			public void run()
+			{
+				log.info("Starting install for {}", urlStr);
+				
+				/* 1. Preliminary checks */
+				if (urlStr == null) {
+					String errMsg = "No app URL provided";
+					log.info("Aborting install: {}", errMsg);
+					callback.installFailed(errMsg);
+					return;
+				}
+				
+				if (!urlStr.toLowerCase(Locale.US).startsWith("https")) {
+					String errMsg = "Secure download location required";
+					log.info("Aborting install: {}", errMsg);
+					callback.installFailed(errMsg);
+					return;
+				}
+				
+				URL url = null;
+				try { url = new URL(urlStr); } catch (MalformedURLException e) { /* handle below */ }
+				if (url == null) {
+					String errMsg = "Invalid app URL";
+					log.info("Aborting install: {}", errMsg);
+					callback.installFailed(errMsg);
+					return;
+				}
+				
+				/* 2. Download archive */
+				File downloadFile = new File(dir, APP_PLATFORM_DOWNLOAD_FILE);
+				HttpURLConnection conn = null;
+				FileOutputStream fileOutputStream = null;
+				String errMsg = null;
+				try
+				{
+					conn = (HttpURLConnection)url.openConnection();
+					
+					if (conn.getResponseCode() != HttpURLConnection.HTTP_OK)
+						throw new IOException();
+					
+					InputStream inputStream = conn.getInputStream();
+					fileOutputStream = new FileOutputStream(downloadFile);
+					
+					byte[] buffer = new byte[BUFFER_SIZE];
+					int count;
+					while ((count = inputStream.read(buffer)) > 0) {
+						fileOutputStream.write(buffer, 0, count);
+						
+						if (!isRunning) {
+							errMsg = "Install canceled";
+							break;
+						}
+					}
+				}
+				catch (IOException e)
+				{
+					errMsg = "Unable to download app";
+				}
+				finally
+				{
+					if (conn != null)
+						conn.disconnect();
+					if (fileOutputStream != null)
+						try { fileOutputStream.close(); } catch (IOException ignored) { }
+				}
+				
+				if (errMsg != null) {
+					log.info("Aborting install: {}", errMsg);
+					callback.installFailed(errMsg);
+					return;
+				}
+				
+				/* 3. Unpack archive */
+				errMsg = null;
+				File unpackDir = new File(dir, APP_PLATFORM_UNPACK_FOLDER);
+				FileInputStream fileInputStream = null;
+				FileOutputStream fileOutputStream2 = null;
+				ZipInputStream zipInputStream = null;
+				try
+				{
+					FileUtils.deleteQuietly(unpackDir);
+					unpackDir.mkdirs();
+					
+					fileInputStream = new FileInputStream(downloadFile);
+					zipInputStream = new ZipInputStream(fileInputStream);
+					ZipEntry zipEntry = null;
+					
+					while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+						File zipEntryFile = new File(unpackDir, zipEntry.getName());
+						if (!isSubdirectory(unpackDir, zipEntryFile))
+							throw new IOException("Security violation?!");
+
+						if (zipEntry.isDirectory()) {
+							zipEntryFile.mkdirs();
+						} else {
+							zipEntryFile.getParentFile().mkdirs();
+							
+							fileOutputStream2 = new FileOutputStream(zipEntryFile);
+							byte[] buffer = new byte[BUFFER_SIZE];
+							int count;
+							while ((count = zipInputStream.read(buffer)) != -1) {
+								fileOutputStream2.write(buffer, 0, count);
+							}
+							fileOutputStream2.close();
+						}
+					}
+				}
+				catch (FileNotFoundException e)
+				{
+					log.info("Exception while extracting: {}", e.toString());
+					errMsg = "Error while extracting archive";
+				}
+				catch (IOException e)
+				{
+					log.info("Exception while extracting: {}", e.toString());
+					errMsg = "Error while extracting archive";
+				}
+				finally
+				{
+					if (fileInputStream != null)
+						try { fileInputStream.close(); } catch (IOException ignored) { }
+					if (fileOutputStream2 != null)
+						try { fileOutputStream2.close(); } catch (IOException ignored) { }
+					if (zipInputStream != null)
+						try { zipInputStream.close(); } catch (IOException ignored) { }
+				}
+				
+				if (errMsg != null) {
+					log.info("Aborting install: {}", errMsg);
+					callback.installFailed(errMsg);
+					return;
+				}
+				
+				/* 4. Check manifest */
+				errMsg = null;
+				File manifest = new File(unpackDir, APP_PLATFORM_MANIFEST_FILE);
+				JSONObject manifestJSON = null;
+				String appId = null;
+				File appsDir = new File(dir, APP_PLATFORM_APP_FOLDER);
+				File appDir = null;
+				try
+				{
+					String manifestData = FileUtils.readFileToString(manifest, Charset.defaultCharset());
+					manifestJSON = new JSONObject(manifestData);
+					
+					for (String key : AppPlatformDBHelper.getMinimalManifestKeys()) {
+						if (!manifestJSON.has(key))
+							throw new JSONException("Missing required key: " + key);
+					}
+					
+					appId = manifestJSON.getString(AppPlatformDBHelper.KEY_ID);
+					appDir = new File(appsDir, appId);
+					if (!isSubdirectory(appsDir, appDir))
+						throw new IOException("App is trying to walk the file system via its id");
+					appDir.mkdirs();
+				}
+				catch (IOException e)
+				{
+					log.info("Exception while reading manifest: {}", e.toString());
+					errMsg = "Malformed manifest";
+				}
+				catch (JSONException e)
+				{
+					log.info("Exception while parsing manifest: {}", e.toString());
+					errMsg = "Malformed manifest";
+				}
+				
+				if (errMsg != null) {
+					log.info("Aborting install: {}", errMsg);
+					callback.installFailed(errMsg);
+					return;
+				}
+				
+				log.info("Install was successful");
+				callback.installSuccessful(appId, unpackDir, appDir, manifestJSON);
+			}
+
+		}
+	}
+
+	private static boolean isSubdirectory(File parent, File child) throws IOException {
+		String parentPath = parent.getCanonicalPath();
+		String childPath = child.getCanonicalPath();
+		return childPath.startsWith(parentPath);
+	}	
+	
+	private static interface AppInstallCallback {
+		void installSuccessful(String appId, File unpackDir, File appDir, JSONObject manifest);
+		void installFailed(String errMsg);
 	}
 }

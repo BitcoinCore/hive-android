@@ -7,11 +7,11 @@ import android.support.v4.app.FragmentActivity;
 
 public class AppRunnerActivity extends FragmentActivity
 {
-	public static final String EXTRA_APP_BASE = "app_base";
+	public static final String EXTRA_APP_ID = "app_id";
 	
-	public static void start(final Context context, final String appBase) {
+	public static void start(final Context context, final String appId) {
 		Intent intent = new Intent(context, AppRunnerActivity.class);
-		intent.putExtra(EXTRA_APP_BASE, appBase);
+		intent.putExtra(EXTRA_APP_ID, appId);
 		context.startActivity(intent);
 	}
 	
@@ -25,11 +25,11 @@ public class AppRunnerActivity extends FragmentActivity
 			if (extras == null)
 				throw new IllegalArgumentException("This activity requires extra data.");
 			
-			String appBase = extras.getString(EXTRA_APP_BASE);
-			if (appBase == null)
-				throw new IllegalArgumentException("App base needs to be provided");			
+			String appId = extras.getString(EXTRA_APP_ID);
+			if (appId == null)
+				throw new IllegalArgumentException("App id needs to be provided");			
 			
-			AppRunnerFragment f = AppRunnerFragment.newInstance(appBase);
+			AppRunnerFragment f = AppRunnerFragment.newInstance(appId);
 			getSupportFragmentManager().beginTransaction().add(android.R.id.content, f).commit();
 		}
 	}

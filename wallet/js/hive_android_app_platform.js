@@ -70,6 +70,10 @@ var bitcoin = (function(Zepto) {
 
         getApplication: function(appId, callback) {
             withCallback(__bitcoin.getApplication, callback, appId);
+        },
+
+        installApp: function(url, callback) {
+            withCallback(__bitcoin.installApp, callback, url);
         }
     }
 }(Zepto));
