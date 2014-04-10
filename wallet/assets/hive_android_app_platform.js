@@ -69,6 +69,10 @@ var bitcoin = (function(Zepto) {
         makeRequest: function(url, options) {
             options['url'] = url;
             Zepto.ajax(options);
+        },
+
+        getApplication: function(appId, callback) {
+            withCallback(__bitcoin.getApplication, callback, appId);
         }
     }
 }(Zepto));

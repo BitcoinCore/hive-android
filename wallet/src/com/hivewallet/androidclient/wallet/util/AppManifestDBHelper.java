@@ -1,9 +1,16 @@
 package com.hivewallet.androidclient.wallet.util;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import com.commonsware.cwac.loaderex.acl.SQLiteCursorLoader;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -21,6 +28,13 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 	public static final String KEY_APIVERSIONMAJOR = "api_version_major";
 	public static final String KEY_APIVERSIONMINOR = "api_version_minor";
 	public static final String KEY_SORT_PRIORITY = "sort_priority";
+	
+	private static final String[] MANIFEST_KEYS =
+		{ KEY_ID, KEY_VERSION, KEY_NAME, KEY_AUTHOR, KEY_CONTACT, KEY_DESCRIPTION
+		, KEY_ICON, KEY_ACCESSEDHOSTS, KEY_APIVERSIONMAJOR, KEY_APIVERSIONMINOR
+		};
+	private static final Set<String> NON_TEXT_KEYS = new HashSet<String>(Arrays.asList(new String[] 
+		{ KEY_ROWID, KEY_APIVERSIONMAJOR, KEY_APIVERSIONMINOR, KEY_SORT_PRIORITY }));
 	
 	private static final String DATABASE_NAME = "manifests";
 	private static final int DATABASE_VERSION = 1;
@@ -87,5 +101,27 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 	public SQLiteCursorLoader getAllAppsCursorLoader(Context context) {
 		return new SQLiteCursorLoader(context, this,
 				"select * from " + TABLE_NAME + " order by " + KEY_SORT_PRIORITY, null);
+	}
+	
+	public Map<String, String> getAppManifest(String appId) {
+		Cursor cursor = getReadableDatabase().query(
+				TABLE_NAME, MANIFEST_KEYS, KEY_ID + " = ?", new String [] { appId }, null, null, null);
+		if (cursor.moveToFirst()) {
+			Map<String, String> manifest = new HashMap<String, String>();
+			for (String key : MANIFEST_KEYS) {
+				int columnIdx = cursor.getColumnIndexOrThrow(key);
+				if (NON_TEXT_KEYS.contains(key)) {
+					int value = cursor.getInt(columnIdx);
+					manifest.put(key, Integer.toString(value));
+				} else {
+					String value = cursor.getString(columnIdx);
+					if (!value.isEmpty())
+						manifest.put(key,  "'" + value + "'");
+				}
+			}
+			return manifest;
+		} else {
+			return null;
+		}
 	}
 }
