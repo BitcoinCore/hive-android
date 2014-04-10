@@ -17,6 +17,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 
+import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.AppPlatformDBHelper;
 import com.hivewallet.androidclient.wallet_test.R;
 import com.squareup.picasso.Picasso;
@@ -40,7 +41,8 @@ public class AppPlatformFragment extends Fragment
 	{
 		super.onAttach(activity);
 		
-		this.appPlatformDBHelper = new AppPlatformDBHelper(activity);
+		WalletApplication application = (WalletApplication)activity.getApplication();
+		this.appPlatformDBHelper = application.getAppPlatformDBHelper();
 	}
 	
 	@Override

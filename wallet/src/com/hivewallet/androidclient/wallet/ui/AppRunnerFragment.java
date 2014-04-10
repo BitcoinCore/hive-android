@@ -184,7 +184,7 @@ public class AppRunnerFragment extends Fragment
 			this.config = application.getConfiguration();
 			this.fragment = fragment;
 			this.webView = webView;
-			this.appPlatformDBHelper = new AppPlatformDBHelper(application);
+			this.appPlatformDBHelper = application.getAppPlatformDBHelper();
 		}
 		
 		@SuppressWarnings("unused")
