@@ -1141,6 +1141,7 @@ var Zepto = (function() {
       rscript = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
       scriptTypeRE = /^(?:text|application)\/javascript/i,
       xmlTypeRE = /^(?:text|application)\/xml/i,
+      jsonTypeRE = /^(?:text|application)\/json/i,
       jsonType = 'application/json',
       htmlType = 'text/html',
       blankRE = /^\s*$/
@@ -1296,6 +1297,7 @@ var Zepto = (function() {
     if (mime) mime = mime.split(';', 2)[0]
     return mime && ( mime == htmlType ? 'html' :
       mime == jsonType ? 'json' :
+      jsonTypeRE.test(mime) ? 'json' :
       scriptTypeRE.test(mime) ? 'script' :
       xmlTypeRE.test(mime) && 'xml' ) || 'text'
   }
