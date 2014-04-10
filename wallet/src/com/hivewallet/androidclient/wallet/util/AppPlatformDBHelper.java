@@ -16,6 +16,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class AppPlatformDBHelper extends SQLiteOpenHelper
 {
+	public static final String APP_STORE_ID = "wei-lu.app-store";
+	
 	public static final String KEY_ROWID = "_id";
 	public static final String KEY_ID = "id";
 	public static final String KEY_VERSION = "version";
@@ -66,30 +68,20 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 	{
 		db.execSQL(TABLE_CREATE);
 		db.execSQL(TABLE_CREATE_IDX);
-		insertDefaultApps(db);
+		insertAppStore(db);
 	}
 	
-	private void insertDefaultApps(SQLiteDatabase db)
+	private void insertAppStore(SQLiteDatabase db)
 	{
-		ContentValues firstEntry = new ContentValues();
-		firstEntry.put(KEY_ID, "com.hivewallet.supporthive");
-		firstEntry.put(KEY_VERSION, "3.0.1");
-		firstEntry.put(KEY_NAME, "Support Hive");
-		firstEntry.put(KEY_AUTHOR, "Taylor Gerring");
-		firstEntry.put(KEY_DESCRIPTION, "Help us continue building Hive!");
-		firstEntry.put(KEY_ICON, "http://hive-app-registry.herokuapp.com/com.hivewallet.supporthive/icon.png");
-		firstEntry.put(KEY_SORT_PRIORITY, 2);
-		db.insert(TABLE_NAME, null, firstEntry);
-		
-		ContentValues secondEntry = new ContentValues();
-		secondEntry.put(KEY_ID, "wei-lu.app-store");
-		secondEntry.put(KEY_VERSION, "1.1.1");
-		secondEntry.put(KEY_NAME, "App Store");
-		secondEntry.put(KEY_AUTHOR, "Wei Lu");
-		secondEntry.put(KEY_DESCRIPTION, "A marketplace for Hive apps");
-		secondEntry.put(KEY_ICON, "https://raw.githubusercontent.com/hivewallet/app-store/master/images/logo.png");
-		secondEntry.put(KEY_SORT_PRIORITY, 1);
-		db.insert(TABLE_NAME, null, secondEntry);
+		ContentValues values = new ContentValues();
+		values.put(KEY_ID, APP_STORE_ID);
+		values.put(KEY_VERSION, "1.1.1");
+		values.put(KEY_NAME, "App Store");
+		values.put(KEY_AUTHOR, "Wei Lu");
+		values.put(KEY_DESCRIPTION, "A marketplace for Hive apps");
+		values.put(KEY_ICON, "");
+		values.put(KEY_SORT_PRIORITY, 1);
+		db.insert(TABLE_NAME, null, values);
 	}
 
 	@Override
