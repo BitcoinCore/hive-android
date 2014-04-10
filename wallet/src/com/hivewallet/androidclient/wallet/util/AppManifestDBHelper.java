@@ -110,13 +110,15 @@ public class AppManifestDBHelper extends SQLiteOpenHelper
 			Map<String, String> manifest = new HashMap<String, String>();
 			for (String key : MANIFEST_KEYS) {
 				int columnIdx = cursor.getColumnIndexOrThrow(key);
+				if (cursor.isNull(columnIdx))
+					continue;
+				
 				if (NON_TEXT_KEYS.contains(key)) {
 					int value = cursor.getInt(columnIdx);
 					manifest.put(key, Integer.toString(value));
 				} else {
 					String value = cursor.getString(columnIdx);
-					if (!value.isEmpty())
-						manifest.put(key,  "'" + value + "'");
+					manifest.put(key,  "'" + value + "'");
 				}
 			}
 			return manifest;
