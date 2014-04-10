@@ -860,9 +860,6 @@ var Zepto = (function() {
   return $
 })()
 
-window.Zepto = Zepto
-window.$ === undefined && (window.$ = Zepto)
-
 ;(function($){
   var _zid = 1, undefined,
       slice = Array.prototype.slice,
