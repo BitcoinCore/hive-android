@@ -133,4 +133,11 @@ public final class Constants
 
 	public static final Charset UTF_8 = Charset.forName("UTF-8");
 	public static final Charset US_ASCII = Charset.forName("US-ASCII");
+
+	public static final String APP_STORE_ID = "wei-lu.app-store";
+	public static final String APP_STORE_MANIFEST = "wei-lu.app-store/manifest.json";
+	public static final String APP_STORE_ICON = "file:///android_asset/wei-lu.app-store/images/logo.png";
+
+	public static final String APP_PLATFORM_FOLDER = "app_platform";
+	public static final String APP_PLATFORM_APP_FOLDER = "apps";
 }

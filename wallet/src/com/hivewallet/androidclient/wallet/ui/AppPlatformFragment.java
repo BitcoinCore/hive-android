@@ -17,6 +17,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 
+import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.AppPlatformDBHelper;
 import com.hivewallet.androidclient.wallet_test.R;
@@ -126,11 +127,11 @@ public class AppPlatformFragment extends Fragment
 					String appId = cursor.getString(cursor.getColumnIndexOrThrow(AppPlatformDBHelper.KEY_ID));
 					String icon = cursor.getString(columnIdx);
 					
-					String appBase = AppRunnerFragment.getAppBase(context);
+					String appBase = AppPlatformDBHelper.getAppBase(context);
 					String iconPath = appBase + appId + "/" + icon;
 					
-					if (AppPlatformDBHelper.APP_STORE_ID.equals(appId))
-						iconPath = AppPlatformDBHelper.APP_STORE_ICON;
+					if (Constants.APP_STORE_ID.equals(appId))
+						iconPath = Constants.APP_STORE_ICON;
 					
 					Picasso.with(context).load(iconPath).into(imageView);
 					return true;

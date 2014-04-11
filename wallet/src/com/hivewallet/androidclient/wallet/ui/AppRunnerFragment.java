@@ -67,10 +67,8 @@ public class AppRunnerFragment extends Fragment
 	private static final String HIVE_ANDROID_APP_PLATFORM_JS = "hive_android_app_platform.min.js";
 	private static final String ARGUMENT_APP_ID = "app_id";
 	private static final String APP_STORE_BASE = "file:///android_asset/";
-	private static final String APP_PLATFORM_FOLDER = "app_platform";
 	private static final String APP_PLATFORM_DOWNLOAD_FILE = "app.hiveapp";
 	private static final String APP_PLATFORM_UNPACK_FOLDER = "unpacked_app";
-	private static final String APP_PLATFORM_APP_FOLDER = "apps";
 	private static final String APP_PLATFORM_MANIFEST_FILE = "manifest.json";
 	
 	private WebView webView;
@@ -100,8 +98,8 @@ public class AppRunnerFragment extends Fragment
 		if (appId == null)
 			throw new IllegalArgumentException("App id needs to be provided");
 		
-		String appBase = AppRunnerFragment.getAppBase(getActivity()) + appId + "/";
-		if (AppPlatformDBHelper.APP_STORE_ID.equals(appId))
+		String appBase = AppPlatformDBHelper.getAppBase(getActivity()) + appId + "/";
+		if (Constants.APP_STORE_ID.equals(appId))
 			appBase = APP_STORE_BASE + appId + "/";		
 		
 		View view = inflater.inflate(R.layout.app_runner_fragment, container, false);
@@ -138,12 +136,6 @@ public class AppRunnerFragment extends Fragment
 		
 		super.onPause();
 	}
-	
-	public static String getAppBase(Context context) {
-		File appPlatform = context.getDir(APP_PLATFORM_FOLDER, Context.MODE_PRIVATE);
-		File appsDir = new File(appPlatform, APP_PLATFORM_APP_FOLDER);
-		return "file://" + appsDir.getAbsolutePath() + "/";
-	}	
 	
 	private static class AppPlatformWebViewClient extends WebViewClient {
 		private Activity activity;
@@ -347,7 +339,7 @@ public class AppRunnerFragment extends Fragment
 			}
 			
 			lastInstallAppCallbackId = callbackId;
-			File dir = application.getDir(APP_PLATFORM_FOLDER, Context.MODE_PRIVATE);
+			File dir = application.getDir(Constants.APP_PLATFORM_FOLDER, Context.MODE_PRIVATE);
 			appInstaller = new AppInstaller(url, dir, this);
 			appInstaller.start();
 		}
@@ -571,7 +563,7 @@ public class AppRunnerFragment extends Fragment
 				File manifest = new File(unpackDir, APP_PLATFORM_MANIFEST_FILE);
 				JSONObject manifestJSON = null;
 				String appId = null;
-				File appsDir = new File(dir, APP_PLATFORM_APP_FOLDER);
+				File appsDir = new File(dir, Constants.APP_PLATFORM_APP_FOLDER);
 				File appDir = null;
 				try
 				{

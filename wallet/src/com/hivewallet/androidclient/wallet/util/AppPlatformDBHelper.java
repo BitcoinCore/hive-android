@@ -1,5 +1,6 @@
 package com.hivewallet.androidclient.wallet.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -17,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.commonsware.cwac.loaderex.acl.SQLiteCursorLoader;
+import com.hivewallet.androidclient.wallet.Constants;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -27,10 +29,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class AppPlatformDBHelper extends SQLiteOpenHelper
 {
-	public static final String APP_STORE_ID = "wei-lu.app-store";
-	public static final String APP_STORE_MANIFEST = "wei-lu.app-store/manifest.json";
-	public static final String APP_STORE_ICON = "file:///android_asset/wei-lu.app-store/images/logo.png";
-	
 	public static final String KEY_ROWID = "_id";
 	public static final String KEY_ID = "id";
 	public static final String KEY_VERSION = "version";
@@ -102,11 +100,11 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 	
 	private void insertAppStore(SQLiteDatabase db) throws IOException, JSONException
 	{
-		InputStream is = assetManager.open(APP_STORE_MANIFEST);
+		InputStream is = assetManager.open(Constants.APP_STORE_MANIFEST);
 		String manifestData = IOUtils.toString(is, Charset.defaultCharset());
 		JSONObject manifestJSON = new JSONObject(manifestData);
-		manifestJSON.put(KEY_ICON, APP_STORE_ICON);
-		addManifest(APP_STORE_ID, manifestJSON, db);
+		manifestJSON.put(KEY_ICON, Constants.APP_STORE_ICON);
+		addManifest(Constants.APP_STORE_ID, manifestJSON, db);
 	}
 
 	@Override
@@ -175,8 +173,14 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 		values.put(KEY_SORT_PRIORITY, 100);
 		db.insert(TABLE_NAME, null, values);
 	}
-	
+
 	public static List<String> getMinimalManifestKeys() {
 		return Collections.unmodifiableList(Arrays.asList(MINIMAL_MANIFEST_KEYS));
 	}
+	
+	public static String getAppBase(Context context) {
+		File appPlatform = context.getDir(Constants.APP_PLATFORM_FOLDER, Context.MODE_PRIVATE);
+		File appsDir = new File(appPlatform, Constants.APP_PLATFORM_APP_FOLDER);
+		return "file://" + appsDir.getAbsolutePath() + "/";
+	}	
 }
