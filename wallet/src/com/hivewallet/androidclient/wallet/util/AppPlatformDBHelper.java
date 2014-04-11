@@ -115,7 +115,7 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 	
 	public SQLiteCursorLoader getAllAppsCursorLoader(Context context) {
 		return new SQLiteCursorLoader(context, this,
-				"select * from " + TABLE_NAME + " order by " + KEY_SORT_PRIORITY, null);
+				"select * from " + TABLE_NAME + " order by " + KEY_SORT_PRIORITY + ", " + KEY_NAME, null);
 	}
 	
 	public Map<String, String> getAppManifest(String appId) {
