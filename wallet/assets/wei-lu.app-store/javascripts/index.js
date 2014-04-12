@@ -1,5 +1,3 @@
-window.eval(hive.init())
-
 var registryBaseURL = 'https://hive-app-registry.herokuapp.com/'
 function listApps(){
   var url = registryBaseURL + 'index.json'

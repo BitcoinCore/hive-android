@@ -23,6 +23,7 @@ import java.util.zip.ZipInputStream;
 import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -74,6 +75,7 @@ public class AppRunnerFragment extends Fragment
 	private WebView webView;
 	
 	private AppPlatformApi appPlatformApi;
+	private String platformJS;
 	
 	public static AppRunnerFragment newInstance(String appId) {
 		AppRunnerFragment f = new AppRunnerFragment();
@@ -86,6 +88,22 @@ public class AppRunnerFragment extends Fragment
 	}
 	
 	public AppRunnerFragment() { /* required default constructor */ }
+	
+	@Override
+	public void onAttach(Activity activity)
+	{
+		super.onAttach(activity);
+		
+		try
+		{
+			final InputStream is = activity.getAssets().open(HIVE_ANDROID_APP_PLATFORM_JS);
+			platformJS = IOUtils.toString(is, Charset.defaultCharset());
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException("Error while loading platform javascript layer", e);
+		}
+	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -106,11 +124,12 @@ public class AppRunnerFragment extends Fragment
 		webView = (WebView)view.findViewById(R.id.wv_app_runner);
 
 		webView.setWebViewClient(new AppPlatformWebViewClient(getActivity(), appBase));
-		webView.addJavascriptInterface(new AppPlatformApiLoader(getActivity().getAssets()), "hive");
+		webView.addJavascriptInterface(new AppPlatformApiLoader(platformJS), "hive");
 		appPlatformApi = new AppPlatformApi(this, webView);
 		webView.addJavascriptInterface(appPlatformApi, "__bitcoin");
 		
 		webView.getSettings().setJavaScriptEnabled(true);
+		webView.loadUrl("javascript:" + platformJS);
 		webView.loadUrl(appBase + "index.html");
 		
 		return view;
@@ -167,32 +186,16 @@ public class AppRunnerFragment extends Fragment
 	}
 	
 	private static class AppPlatformApiLoader {
-		private AssetManager assetManager;
+		private String platformJS;
 		
-		public AppPlatformApiLoader(AssetManager assetManager)
+		public AppPlatformApiLoader(String platformJS)
 		{
-			this.assetManager = assetManager;
+			this.platformJS = platformJS;
 		}
 		
 		@SuppressWarnings("unused")
 		public String init() {
-			try {
-				final InputStream is = assetManager.open(HIVE_ANDROID_APP_PLATFORM_JS);
-				InputSupplier<InputStream> inputSupplier = new InputSupplier<InputStream>()
-				{
-					@Override
-					public InputStream getInput() throws IOException
-					{
-						return is;
-					}
-				};
-				final String androidSubstrateLayer = CharStreams.toString(
-						CharStreams.newReaderSupplier(inputSupplier, Charsets.UTF_8)).replace('\n', ' ');
-				
-				return androidSubstrateLayer;
-			} catch (IOException e) {
-				throw new RuntimeException("Error while trying to activate Hive API", e);
-			}
+			return platformJS;
 		}
 	}
 	
