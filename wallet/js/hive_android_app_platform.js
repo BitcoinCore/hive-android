@@ -28,6 +28,8 @@ var bitcoin = (function(Zepto) {
         BTC_IN_SATOSHI: 100000000,
         MBTC_IN_SATOSHI: 100000,
         UBTC_IN_SATOSHI: 100,
+        TX_TYPE_INCOMING: 'incoming',
+        TX_TYPE_OUTGOING: 'outgoing',
 
         __callbackFromAndroid: function(callbackId, params) {
             var callback = callbacks[callbackId];
@@ -74,6 +76,10 @@ var bitcoin = (function(Zepto) {
 
         installApp: function(url, callback) {
             withCallback(__bitcoin.installApp, callback, url);
+        },
+
+        getTransaction: function(txid, callback) {
+            withCallback(__bitcoin.getTransaction, callback, txid);
         }
     }
 }(Zepto));

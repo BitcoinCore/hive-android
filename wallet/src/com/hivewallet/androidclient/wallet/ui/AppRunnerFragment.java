@@ -11,11 +11,15 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -33,7 +37,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -45,10 +48,13 @@ import android.webkit.WebViewClient;
 
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.AddressFormatException;
-import com.google.common.base.Charsets;
+import com.google.bitcoin.core.ScriptException;
+import com.google.bitcoin.core.Sha256Hash;
+import com.google.bitcoin.core.Transaction;
+import com.google.bitcoin.core.TransactionInput;
+import com.google.bitcoin.core.TransactionOutput;
+import com.google.bitcoin.core.Wallet;
 import com.google.common.base.Joiner;
-import com.google.common.io.CharStreams;
-import com.google.common.io.InputSupplier;
 import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.ExchangeRatesProvider;
@@ -71,6 +77,8 @@ public class AppRunnerFragment extends Fragment
 	private static final String APP_PLATFORM_DOWNLOAD_FILE = "app.hiveapp";
 	private static final String APP_PLATFORM_UNPACK_FOLDER = "unpacked_app";
 	private static final String APP_PLATFORM_MANIFEST_FILE = "manifest.json";
+	private static final String TX_TYPE_OUTGOING = "outgoing";
+	private static final String TX_TYPE_INCOMING = "incoming";
 	
 	private WebView webView;
 	
@@ -322,6 +330,51 @@ public class AppRunnerFragment extends Fragment
 			lastSendMoneyCallbackId = -1;
 		}
 		
+		@SuppressWarnings({ "unused", "deprecation" })
+		public void getTransaction(long callbackId, String txid) {
+			Wallet wallet = application.getWallet();
+			Transaction tx = null;
+			
+			try {
+				Sha256Hash hash = new Sha256Hash(txid);
+				tx = wallet.getTransaction(hash);
+			} catch (IllegalArgumentException e) { /* handle below */ };
+			
+			if (tx != null) {
+				Map<String, String> info = new HashMap<String, String>();
+				final BigInteger value = tx.getValue(wallet);
+				final boolean outgoing = value.signum() < 0;
+				
+				info.put("id", "'" + tx.getHashAsString() + "'");
+				info.put("amount", value.abs().toString());
+				info.put("type", outgoing ? "'" + TX_TYPE_OUTGOING + "'" : "'" + TX_TYPE_INCOMING + "'");
+				info.put("timestamp", "'" + asISOString(tx.getUpdateTime()) + "'");
+				
+				List<String> inputAddresses = new ArrayList<String>();
+				for (TransactionInput input : tx.getInputs()) {
+					try {
+						Address address = input.getScriptSig().getFromAddress(Constants.NETWORK_PARAMETERS);
+						inputAddresses.add("'" + address.toString() + "'");
+					} catch (ScriptException e) { /* skip input */ } 
+				}
+				
+				List<String> outputAddresses = new ArrayList<String>();
+				for (TransactionOutput output : tx.getOutputs()) {
+					try {
+						Address address = output.getScriptPubKey().getToAddress(Constants.NETWORK_PARAMETERS);
+						outputAddresses.add("'" + address.toString() + "'");
+					} catch (ScriptException e) { /* skip output */ } 
+				}
+				
+				info.put("inputAddresses", "[" + Joiner.on(',').join(inputAddresses) + "]");
+				info.put("outputAddresses", "[" + Joiner.on(',').join(outputAddresses) + "]");
+				
+				performCallback(callbackId, toJSDataStructure(info));
+			} else {
+				performCallback(callbackId, "null");
+			}
+		}
+		
 		@SuppressWarnings("unused")
 		public void getApplication(long callbackId, String appId) {
 			Map<String, String> manifest = appPlatformDBHelper.getAppManifest(appId);
@@ -406,6 +459,13 @@ public class AppRunnerFragment extends Fragment
 			
 			String sEntries = Joiner.on(',').withKeyValueSeparator(":").join(ppEntries);
 			return "{" + sEntries + "}";
+		}
+		
+		private static String asISOString(Date date) {
+			TimeZone tz = TimeZone.getTimeZone("UTC");
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'", Locale.US);
+			df.setTimeZone(tz);
+			return df.format(date);
 		}
 		
 		private static class AppInstaller extends Thread {
