@@ -1,15 +1,9 @@
 package com.hivewallet.androidclient.wallet.ui;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -21,14 +15,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +53,7 @@ import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.integration.android.BitcoinIntegration;
 import com.hivewallet.androidclient.wallet.data.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.send.SendCoinsActivity;
+import com.hivewallet.androidclient.wallet.util.AppInstaller;
 import com.hivewallet.androidclient.wallet.util.AppPlatformDBHelper;
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
 import com.hivewallet.androidclient.wallet_test.R;
@@ -74,9 +66,6 @@ public class AppRunnerFragment extends Fragment
 	private static final String HIVE_ANDROID_APP_PLATFORM_JS = "hive_android_app_platform.min.js";
 	private static final String ARGUMENT_APP_ID = "app_id";
 	private static final String APP_STORE_BASE = "file:///android_asset/";
-	private static final String APP_PLATFORM_DOWNLOAD_FILE = "app.hiveapp";
-	private static final String APP_PLATFORM_UNPACK_FOLDER = "unpacked_app";
-	private static final String APP_PLATFORM_MANIFEST_FILE = "manifest.json";
 	private static final String TX_TYPE_OUTGOING = "outgoing";
 	private static final String TX_TYPE_INCOMING = "incoming";
 	
@@ -207,7 +196,7 @@ public class AppRunnerFragment extends Fragment
 		}
 	}
 	
-	private static class AppPlatformApi implements AppInstallCallback {
+	private static class AppPlatformApi implements AppInstaller.AppInstallCallback {
 		private static final Logger log = LoggerFactory.getLogger(AppPlatformApi.class);
 		
 		private WalletApplication application;
@@ -467,215 +456,5 @@ public class AppRunnerFragment extends Fragment
 			df.setTimeZone(tz);
 			return df.format(date);
 		}
-		
-		private static class AppInstaller extends Thread {
-			private static final int BUFFER_SIZE = 4096;
-			
-			private String urlStr;
-			private AppInstallCallback callback;
-			private File dir;
-			volatile private boolean isRunning = true;
-			
-			public AppInstaller(String url, File dir, AppInstallCallback callback)
-			{
-				this.urlStr = url;
-				this.dir = dir;
-				this.callback = callback;
-			}
-			
-			public void cancel() {
-				this.isRunning = false;
-			}
-			
-			@Override
-			public void run()
-			{
-				log.info("Starting install for {}", urlStr);
-				
-				/* 1. Preliminary checks */
-				if (urlStr == null) {
-					String errMsg = "No app URL provided";
-					log.info("Aborting install: {}", errMsg);
-					callback.installFailed(errMsg);
-					return;
-				}
-				
-				if (!urlStr.toLowerCase(Locale.US).startsWith("https")) {
-					String errMsg = "Secure download location required";
-					log.info("Aborting install: {}", errMsg);
-					callback.installFailed(errMsg);
-					return;
-				}
-				
-				URL url = null;
-				try { url = new URL(urlStr); } catch (MalformedURLException e) { /* handle below */ }
-				if (url == null) {
-					String errMsg = "Invalid app URL";
-					log.info("Aborting install: {}", errMsg);
-					callback.installFailed(errMsg);
-					return;
-				}
-				
-				/* 2. Download archive */
-				File downloadFile = new File(dir, APP_PLATFORM_DOWNLOAD_FILE);
-				HttpURLConnection conn = null;
-				FileOutputStream fileOutputStream = null;
-				String errMsg = null;
-				try
-				{
-					conn = (HttpURLConnection)url.openConnection();
-					
-					if (conn.getResponseCode() != HttpURLConnection.HTTP_OK)
-						throw new IOException();
-					
-					InputStream inputStream = conn.getInputStream();
-					fileOutputStream = new FileOutputStream(downloadFile);
-					
-					byte[] buffer = new byte[BUFFER_SIZE];
-					int count;
-					while ((count = inputStream.read(buffer)) > 0) {
-						fileOutputStream.write(buffer, 0, count);
-						
-						if (!isRunning) {
-							errMsg = "Install canceled";
-							break;
-						}
-					}
-				}
-				catch (IOException e)
-				{
-					errMsg = "Unable to download app";
-				}
-				finally
-				{
-					if (conn != null)
-						conn.disconnect();
-					if (fileOutputStream != null)
-						try { fileOutputStream.close(); } catch (IOException ignored) { }
-				}
-				
-				if (errMsg != null) {
-					log.info("Aborting install: {}", errMsg);
-					callback.installFailed(errMsg);
-					return;
-				}
-				
-				/* 3. Unpack archive */
-				errMsg = null;
-				File unpackDir = new File(dir, APP_PLATFORM_UNPACK_FOLDER);
-				FileInputStream fileInputStream = null;
-				FileOutputStream fileOutputStream2 = null;
-				ZipInputStream zipInputStream = null;
-				try
-				{
-					FileUtils.deleteQuietly(unpackDir);
-					unpackDir.mkdirs();
-					
-					fileInputStream = new FileInputStream(downloadFile);
-					zipInputStream = new ZipInputStream(fileInputStream);
-					ZipEntry zipEntry = null;
-					
-					while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-						File zipEntryFile = new File(unpackDir, zipEntry.getName());
-						if (!isSubdirectory(unpackDir, zipEntryFile))
-							throw new IOException("Security violation?!");
-
-						if (zipEntry.isDirectory()) {
-							zipEntryFile.mkdirs();
-						} else {
-							zipEntryFile.getParentFile().mkdirs();
-							
-							fileOutputStream2 = new FileOutputStream(zipEntryFile);
-							byte[] buffer = new byte[BUFFER_SIZE];
-							int count;
-							while ((count = zipInputStream.read(buffer)) != -1) {
-								fileOutputStream2.write(buffer, 0, count);
-							}
-							fileOutputStream2.close();
-						}
-					}
-				}
-				catch (FileNotFoundException e)
-				{
-					log.info("Exception while extracting: {}", e.toString());
-					errMsg = "Error while extracting archive";
-				}
-				catch (IOException e)
-				{
-					log.info("Exception while extracting: {}", e.toString());
-					errMsg = "Error while extracting archive";
-				}
-				finally
-				{
-					if (fileInputStream != null)
-						try { fileInputStream.close(); } catch (IOException ignored) { }
-					if (fileOutputStream2 != null)
-						try { fileOutputStream2.close(); } catch (IOException ignored) { }
-					if (zipInputStream != null)
-						try { zipInputStream.close(); } catch (IOException ignored) { }
-				}
-				
-				if (errMsg != null) {
-					log.info("Aborting install: {}", errMsg);
-					callback.installFailed(errMsg);
-					return;
-				}
-				
-				/* 4. Check manifest */
-				errMsg = null;
-				File manifest = new File(unpackDir, APP_PLATFORM_MANIFEST_FILE);
-				JSONObject manifestJSON = null;
-				String appId = null;
-				File appsDir = new File(dir, Constants.APP_PLATFORM_APP_FOLDER);
-				File appDir = null;
-				try
-				{
-					String manifestData = FileUtils.readFileToString(manifest, Charset.defaultCharset());
-					manifestJSON = new JSONObject(manifestData);
-					
-					for (String key : AppPlatformDBHelper.getMinimalManifestKeys()) {
-						if (!manifestJSON.has(key))
-							throw new JSONException("Missing required key: " + key);
-					}
-					
-					appId = manifestJSON.getString(AppPlatformDBHelper.KEY_ID);
-					appDir = new File(appsDir, appId);
-					if (!isSubdirectory(appsDir, appDir))
-						throw new IOException("App is trying to walk the file system via its id");
-					appDir.mkdirs();
-				}
-				catch (IOException e)
-				{
-					log.info("Exception while reading manifest: {}", e.toString());
-					errMsg = "Malformed manifest";
-				}
-				catch (JSONException e)
-				{
-					log.info("Exception while parsing manifest: {}", e.toString());
-					errMsg = "Malformed manifest";
-				}
-				
-				if (errMsg != null) {
-					log.info("Aborting install: {}", errMsg);
-					callback.installFailed(errMsg);
-					return;
-				}
-				
-				log.info("Install was successful");
-				callback.installSuccessful(appId, unpackDir, appDir, manifestJSON);
-			}
-
-		}
-	}
-
-	private static boolean isSubdirectory(File parent, File child) throws IOException {
-		String parentPath = parent.getCanonicalPath();
-		String childPath = child.getCanonicalPath();
-		return childPath.startsWith(parentPath);
-	}	
-	
-	private static interface AppInstallCallback {
-		void installSuccessful(String appId, File unpackDir, File appDir, JSONObject manifest);
-		void installFailed(String errMsg);
 	}
 }
