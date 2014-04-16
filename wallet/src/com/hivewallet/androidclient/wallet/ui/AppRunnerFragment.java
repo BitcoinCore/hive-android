@@ -28,9 +28,13 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,6 +54,7 @@ import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.ExchangeRatesProvider;
 import com.hivewallet.androidclient.wallet.WalletApplication;
+import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 import com.hivewallet.androidclient.wallet.integration.android.BitcoinIntegration;
 import com.hivewallet.androidclient.wallet.data.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.send.SendCoinsActivity;
@@ -59,7 +64,7 @@ import com.hivewallet.androidclient.wallet.util.GenericUtils;
 import com.hivewallet.androidclient.wallet_test.R;
 
 @SuppressLint("SetJavaScriptEnabled")
-public class AppRunnerFragment extends Fragment
+public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>
 {
 	private static final Logger log = LoggerFactory.getLogger(AppRunnerFragment.class);
 	private static final int REQUEST_CODE_SEND_MONEY = 0;
@@ -68,6 +73,9 @@ public class AppRunnerFragment extends Fragment
 	private static final String APP_STORE_BASE = "file:///android_asset/";
 	private static final String TX_TYPE_OUTGOING = "outgoing";
 	private static final String TX_TYPE_INCOMING = "incoming";
+	private static final int ID_RATE_LOADER = 0;
+	
+	private Activity activity;
 	
 	private WebView webView;
 	
@@ -91,6 +99,8 @@ public class AppRunnerFragment extends Fragment
 	{
 		super.onAttach(activity);
 		
+		this.activity = activity;
+		
 		try
 		{
 			final InputStream is = activity.getAssets().open(HIVE_ANDROID_APP_PLATFORM_JS);
@@ -113,14 +123,14 @@ public class AppRunnerFragment extends Fragment
 		if (appId == null)
 			throw new IllegalArgumentException("App id needs to be provided");
 		
-		String appBase = AppPlatformDBHelper.getAppBase(getActivity()) + appId + "/";
+		String appBase = AppPlatformDBHelper.getAppBase(activity) + appId + "/";
 		if (Constants.APP_STORE_ID.equals(appId))
 			appBase = APP_STORE_BASE + appId + "/";		
 		
 		View view = inflater.inflate(R.layout.app_runner_fragment, container, false);
 		webView = (WebView)view.findViewById(R.id.wv_app_runner);
 
-		webView.setWebViewClient(new AppPlatformWebViewClient(getActivity(), appBase));
+		webView.setWebViewClient(new AppPlatformWebViewClient(activity, appBase));
 		webView.addJavascriptInterface(new AppPlatformApiLoader(platformJS), "hive");
 		appPlatformApi = new AppPlatformApi(this, webView);
 		webView.addJavascriptInterface(appPlatformApi, "__bitcoin");
@@ -146,12 +156,43 @@ public class AppRunnerFragment extends Fragment
 	}
 	
 	@Override
+	public void onResume()
+	{
+		super.onResume();
+		
+		getLoaderManager().initLoader(ID_RATE_LOADER, null, this);
+	}
+	
+	@Override
 	public void onPause()
 	{
+		getLoaderManager().destroyLoader(ID_RATE_LOADER);
+		
 		appPlatformApi.onPause();
 		
 		super.onPause();
 	}
+	
+	@Override
+	public Loader<Cursor> onCreateLoader(final int id, final Bundle args)
+	{
+		return new CursorLoader(activity, ExchangeRatesProvider.contentUri(activity.getPackageName()), null, null, null, null);
+	}
+
+	@Override
+	public void onLoadFinished(final Loader<Cursor> loader, final Cursor cursor)
+	{
+		List<ExchangeRate> exchangeRates = new ArrayList<ExchangeRatesProvider.ExchangeRate>();
+		for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+			exchangeRates.add(ExchangeRatesProvider.getExchangeRate(cursor));
+		}
+		appPlatformApi.setExchangeRates(exchangeRates);
+	}
+
+	@Override
+	public void onLoaderReset(final Loader<Cursor> loader)
+	{
+	}	
 	
 	private static class AppPlatformWebViewClient extends WebViewClient {
 		private Activity activity;
@@ -206,6 +247,9 @@ public class AppRunnerFragment extends Fragment
 		
 		volatile private long lastSendMoneyCallbackId = -1;
 		volatile private long lastInstallAppCallbackId = -1;
+		
+		volatile private List<ExchangeRate> exchangeRates;
+		private boolean shouldForwardExchangeRateUpdates = false; 
 		
 		private AppPlatformDBHelper appPlatformDBHelper;
 		private AppInstaller appInstaller;
@@ -365,6 +409,44 @@ public class AppRunnerFragment extends Fragment
 		}
 		
 		@SuppressWarnings("unused")
+		public void subscribeToExchangeRateUpdates() {
+			shouldForwardExchangeRateUpdates = true;
+		}
+		
+		@SuppressWarnings("unused")
+		public void unsubscribeFromExchangeRateUpdates() {
+			shouldForwardExchangeRateUpdates = false;
+		}
+		
+		@SuppressWarnings("unused")
+		public void updateExchangeRate(String currency) {
+			maybeForwardExchangeRateUpdates(currency);	// if do not have data yet, we will forward it
+														// as soon as we receive it
+		}
+		
+		synchronized private void maybeForwardExchangeRateUpdates() {
+			maybeForwardExchangeRateUpdates(null);
+		}
+		
+		synchronized private void maybeForwardExchangeRateUpdates(@Nullable String currency) {
+			if (!shouldForwardExchangeRateUpdates)
+				return;
+			
+			if (exchangeRates == null)
+				return;
+			
+			Map<String, String> info = new HashMap<String, String>();
+			for (ExchangeRate exchangeRate : exchangeRates) {
+				if (currency != null && !exchangeRate.currencyCode.equalsIgnoreCase(currency))
+					continue;
+				
+				info.put(exchangeRate.currencyCode,
+						GenericUtils.formatValue(exchangeRate.rate, Constants.BTC_MAX_PRECISION, 0));
+			}
+			forwardExchangeRateUpdate(toJSDataStructure(info));
+		}
+		
+		@SuppressWarnings("unused")
 		public void getApplication(long callbackId, String appId) {
 			Map<String, String> manifest = appPlatformDBHelper.getAppManifest(appId);
 			
@@ -433,6 +515,23 @@ public class AppRunnerFragment extends Fragment
 					webView.loadUrl(js);
 				}
 			});			
+		}
+		
+		private void forwardExchangeRateUpdate(String update) {
+			final String js = "javascript:bitcoin.__exchangeRateUpdateFromAndroid(" + update + ");";
+			fragment.getActivity().runOnUiThread(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					webView.loadUrl(js);
+				}
+			});			
+		}
+		
+		public void setExchangeRates(List<ExchangeRate> exchangeRates) {
+			this.exchangeRates = exchangeRates;
+			maybeForwardExchangeRateUpdates();
 		}
 		
 		public void onPause() {

@@ -3,6 +3,7 @@ var bitcoin = (function(Zepto) {
     var MAX_CALLBACK_ID = 2147483647;
     var nextCallbackId = 0;
     var callbacks = {};
+    var listeners = [];
 
     var nextId = function() {
         var id = nextCallbackId;
@@ -40,6 +41,22 @@ var bitcoin = (function(Zepto) {
             }
 
             delete callbacks[callbackId];
+        },
+
+        __exchangeRateUpdateFromAndroid: function(rates) {
+            for (var i = 0; i < listeners.length; i++) {
+                listener = listeners[i];
+
+                if (typeof(listener) !== 'function')
+                    continue;
+
+                for (rate in rates) {
+                    if (!rates.hasOwnProperty(rate))
+                        continue;
+
+                    listener(rate, rates[rate]);
+                }
+            }
         },
 
         getUserInfo: function(callback) {
@@ -80,6 +97,24 @@ var bitcoin = (function(Zepto) {
 
         getTransaction: function(txid, callback) {
             withCallback(__bitcoin.getTransaction, callback, txid);
+        },
+
+        addExchangeRateListener: function(callback) {
+            listeners.push(callback);
+            __bitcoin.subscribeToExchangeRateUpdates();
+        },
+
+        removeExchangeRateListener: function(callback) {
+            var idx = listeners.indexOf(callback);
+            if (idx >= 0)
+                listeners.splice(idx, 1);
+
+            if (listeners.length == 0)
+                __bitcoin.unsubscribeFromExchangeRateUpdates();
+        },
+
+        updateExchangeRate: function(currency) {
+            __bitcoin.updateExchangeRate(currency);
         }
     }
 }(Zepto));
