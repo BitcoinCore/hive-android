@@ -1,5 +1,6 @@
 package com.hivewallet.androidclient.wallet.ui;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +39,7 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -69,8 +71,8 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 	private static final Logger log = LoggerFactory.getLogger(AppRunnerFragment.class);
 	private static final int REQUEST_CODE_SEND_MONEY = 0;
 	private static final String HIVE_ANDROID_APP_PLATFORM_JS = "hive_android_app_platform.min.js";
+	private static final boolean ALLOW_EXTERNAL_URLS = true;
 	private static final String ARGUMENT_APP_ID = "app_id";
-	private static final String APP_STORE_BASE = "file:///android_asset/";
 	private static final String TX_TYPE_OUTGOING = "outgoing";
 	private static final String TX_TYPE_INCOMING = "incoming";
 	private static final int ID_RATE_LOADER = 0;
@@ -123,21 +125,34 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 		if (appId == null)
 			throw new IllegalArgumentException("App id needs to be provided");
 		
-		String appBase = AppPlatformDBHelper.getAppBase(activity) + appId + "/";
-		if (Constants.APP_STORE_ID.equals(appId))
-			appBase = APP_STORE_BASE + appId + "/";		
+		String appBaseURL = "http://" + appId + ".hiveapp/";
 		
 		View view = inflater.inflate(R.layout.app_runner_fragment, container, false);
 		webView = (WebView)view.findViewById(R.id.wv_app_runner);
 
-		webView.setWebViewClient(new AppPlatformWebViewClient(activity, appBase));
+		webView.setWebViewClient(new AppPlatformWebViewClient(activity, appId, appBaseURL));
 		webView.addJavascriptInterface(new AppPlatformApiLoader(platformJS), "hive");
 		appPlatformApi = new AppPlatformApi(this, webView);
 		webView.addJavascriptInterface(appPlatformApi, "__bitcoin");
 		
 		webView.getSettings().setJavaScriptEnabled(true);
 		webView.loadUrl("javascript:" + platformJS);
-		webView.loadUrl(appBase + "index.html");
+		
+		try {
+			InputStream is = null;
+			if (Constants.APP_STORE_ID.equals(appId))
+				is = activity.getAssets().open(Constants.APP_STORE_ID + "/index.html");
+			else
+				is = getAppInputStream(activity, appId, "index.html");
+
+			if (is == null)
+				throw new IOException("InputStream is null after trying to load app index.html file.");
+				
+			String data = IOUtils.toString(is); 
+			webView.loadDataWithBaseURL(appBaseURL, data, null, "UTF-8", null);
+		} catch (IOException e) {
+			throw new RuntimeException("Unable to load index.html for " + appId, e);
+		}
 		
 		return view;
 	}
@@ -196,30 +211,82 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 	
 	private static class AppPlatformWebViewClient extends WebViewClient {
 		private Activity activity;
-		private String baseURL;
+		private String appId;
+		private String appBaseURL;
 		
-		public AppPlatformWebViewClient(Activity activity, String baseURL)
+		public AppPlatformWebViewClient(Activity activity, String appId, String appBaseURL)
 		{
 			super();
 			
 			this.activity = activity;
-			this.baseURL = baseURL.toLowerCase(Locale.US);
+			this.appId = appId;
+			this.appBaseURL = appBaseURL;
+		}
+		
+		@Override
+		public WebResourceResponse shouldInterceptRequest(WebView view, String url)
+		{
+			Uri uri = Uri.parse(url);
+			if (uri == null)
+				return null;
+			
+			String baseURL = "http://" + uri.getHost() + "/";
+			if (baseURL.equalsIgnoreCase(appBaseURL)) {
+				// simulate virtual host
+				String path = uri.getPath();
+				if (path == null)
+					path = "index.html";
+				
+				InputStream is = null;
+				if (Constants.APP_STORE_ID.equals(appId)) {
+					try
+					{
+						log.info("Accessing asset file: {}", path);
+						is = activity.getAssets().open(Constants.APP_STORE_ID + path);
+					}
+					catch (IOException ignored) { }
+				} else {
+					is = getAppInputStream(activity, appId, path);
+				}
+				
+				if (is == null) {
+					log.info("404 for app {} when accessing {}", appId, url);
+					is = new ByteArrayInputStream("404 - file not found".getBytes(Charset.defaultCharset()));
+				}
+				
+				return new WebResourceResponse(null, "UTF-8", is);	// we don't know the MIME type;
+																	// WebView will hopefully figure it out
+			} else {
+				return null;
+			}
 		}
 		
 		@Override
 		public boolean shouldOverrideUrlLoading(WebView view, String url)
 		{
 			String lcUrl = url.toLowerCase(Locale.US);
-			boolean accessAllowed = lcUrl.startsWith(baseURL);
+			boolean isHttp = lcUrl.startsWith("http://") || lcUrl.startsWith("https://");
 			
-			if (!accessAllowed && (lcUrl.startsWith("http://") || lcUrl.startsWith("https://"))) {
-				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-				activity.startActivity(intent);
-			} else if (!accessAllowed) {
-				log.warn("Prevented access to this URL: {}", url);
+			// disallow non-http links
+			if (!isHttp) {
+				log.info("Blocked access to URL: {}", url);
+				return true;	// we grab control for it
 			}
 			
-			return !accessAllowed;
+			// it's an http link; do further checks on it
+			if (ALLOW_EXTERNAL_URLS) {
+				return false;	// let the WebView handle it normally
+			} else {
+				boolean accessAllowed = lcUrl.startsWith(appBaseURL);
+				
+				if (accessAllowed) {
+					return false;
+				} else {
+					Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+					activity.startActivity(intent);
+					return true;
+				}
+			}
 		}
 	}
 	
@@ -556,4 +623,26 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			return df.format(date);
 		}
 	}
+	
+	private static InputStream getAppInputStream(Context context, String appId, String path) {
+		File appPlatform = context.getDir(Constants.APP_PLATFORM_FOLDER, Context.MODE_PRIVATE);
+		File appsDir = new File(appPlatform, Constants.APP_PLATFORM_APP_FOLDER);
+		File appDir = new File(appsDir, appId);
+		File file = new File(appDir, path);
+
+		// double check permission
+		String appDirAbsolutePath = appDir.getAbsolutePath();
+		String fileAbsolutePath = file.getAbsolutePath();
+		if (!fileAbsolutePath.startsWith(appDirAbsolutePath))
+			return null;
+		
+		try
+		{
+			return FileUtils.openInputStream(file);
+		}
+		catch (IOException e)
+		{
+			return null;
+		} 
+	}		
 }

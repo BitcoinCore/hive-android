@@ -1,5 +1,7 @@
 package com.hivewallet.androidclient.wallet.ui;
 
+import java.io.File;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -127,7 +129,7 @@ public class AppPlatformFragment extends Fragment
 					String appId = cursor.getString(cursor.getColumnIndexOrThrow(AppPlatformDBHelper.KEY_ID));
 					String icon = cursor.getString(columnIdx);
 					
-					String appBase = AppPlatformDBHelper.getAppBase(context);
+					String appBase = getAppBase(context);
 					String iconPath = appBase + appId + "/" + icon;
 					
 					if (Constants.APP_STORE_ID.equals(appId))
@@ -140,5 +142,11 @@ public class AppPlatformFragment extends Fragment
 				}
 			}
 		};
+		
+		private static String getAppBase(Context context) {
+			File appPlatform = context.getDir(Constants.APP_PLATFORM_FOLDER, Context.MODE_PRIVATE);
+			File appsDir = new File(appPlatform, Constants.APP_PLATFORM_APP_FOLDER);
+			return "file://" + appsDir.getAbsolutePath() + "/";
+		}     
 	}
 }

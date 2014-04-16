@@ -1,6 +1,5 @@
 package com.hivewallet.androidclient.wallet.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -177,10 +176,4 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 	public static List<String> getMinimalManifestKeys() {
 		return Collections.unmodifiableList(Arrays.asList(MINIMAL_MANIFEST_KEYS));
 	}
-	
-	public static String getAppBase(Context context) {
-		File appPlatform = context.getDir(Constants.APP_PLATFORM_FOLDER, Context.MODE_PRIVATE);
-		File appsDir = new File(appPlatform, Constants.APP_PLATFORM_APP_FOLDER);
-		return "file://" + appsDir.getAbsolutePath() + "/";
-	}	
 }
