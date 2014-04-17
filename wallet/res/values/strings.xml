@@ -289,4 +289,6 @@
 	<string name="no_contacts_yet">Welcome to Hive!\nYou are now ready to\nreceive bitcoins - have fun!</string>
 	<string name="app_platform">Apps</string>
 	<string name="app_icon">App icon</string>
+	<string name="wallet_address_dialog_copy_address">Bitcoin address copied to clipboard</string>
+	<string name="wallet_address_dialog_share_address">Share Bitcoin address via</string>
 </resources>

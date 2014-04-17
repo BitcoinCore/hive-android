@@ -132,7 +132,7 @@ public class ButtonBlockFragment extends SherlockFragment
 
 	private void handleShowQRCode()
 	{
-		BitmapFragment.show(getFragmentManager(), qrCodeBitmap);
+		WalletAddressDialogFragment.show(getFragmentManager(), lastSelectedAddress.toString(), qrCodeBitmap);
 	}
 
 	private final OnSharedPreferenceChangeListener prefsListener = new OnSharedPreferenceChangeListener()
