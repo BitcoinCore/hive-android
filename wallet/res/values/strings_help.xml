@@ -4,34 +4,31 @@
 	<string name="help_wallet">
 <![CDATA[
 		<p>
-			The upper left part of the screen displays your selected Bitcoin address that other people need to know in order to send you Bitcoins.
-			Tap to change the address.
+			Welcome to Hive! Hive is a home for your money.
 		</p>
 		<p>
-			The QR code on the right contains your bitcoin address and can be used for scanning by another party.
-			Tap on the QR code to get a larger version of it.
-		</p>
-		<p>
-			In the middle of the screen, your balance is displayed.
+			The upper left part of the screen displays your Bitcoin balance.
 			The value of your wallet is also shown in one selected local currency.
-			Tap on balance to display list of all local currencies, and tap on one of the currencies to select it as default.
+			Tap on the balance to display a list of all available currencies, and tap on one of them to select it as the default.
 		</p>
 		<p>
-			The bottom of the screen is covered by your transactions list, which is empty at the beginning.
-			Pending transactions are greyed out until they are confirmed.
-			Tap on one entry to add the senders or receivers address to the address book.
-			Swipe left or right to apply filters to the list.
+			Clicking on the QR code symbol will display your primary Bitcoin address, which other people will need to know in order to send you bitcoins.
+		</p>
+
+		<p>
+			You can send or request coins by tapping the icons in the upper right corner.
+			The camera icon can be used to initiate a Bitcoin transaction by scanning a QR code.
 		</p>
 		<p>
-			You can send or request coins by tapping the buttons in the action bar.
-			More options are available in the options menu.
+			The bottom of the screen shows your contact list or - alternatively - your recent transactions.
+			Pending transactions are greyed out until they are confirmed by the Bitcoin network. 
 		</p>
 	]]>
 	</string>
 	<string name="help_request_coins">
 <![CDATA[
 		<p>
-			Using this dialog, you can request coins from another person (who should already have installed Bitcoin Wallet).
+			Using this dialog, you can request coins from another person (who should already have installed Hive).
 		</p>
 		<p>
 			First, you can enter an amount of Bitcoins to request.
@@ -67,7 +64,7 @@
 		</p>
 		<p>
 			You can enter a payment while being offline.
-			It will be sent on next restart of Bitcoin Wallet.
+			It will be sent on next restart of Hive.
 			If you want a payment to be processed as fast as possible, make sure you are well connected (i.e. on a WLAN).
 		</p>
 		<p>
