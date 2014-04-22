@@ -52,6 +52,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
@@ -87,6 +89,7 @@ public class WalletApplication extends Application
 	private Wallet wallet;
 	private PackageInfo packageInfo;
 	private AppPlatformDBHelper appPlatformDBHelper;
+	private RequestQueue volleyRequestQueue;
 
 	private static final Logger log = LoggerFactory.getLogger(WalletApplication.class);
 
@@ -148,6 +151,8 @@ public class WalletApplication extends Application
 		migrateBackup();
 		
 		appPlatformDBHelper = new AppPlatformDBHelper(this);
+		
+		volleyRequestQueue = Volley.newRequestQueue(this);
 	}
 
 	private void initLogging()
@@ -228,6 +233,11 @@ public class WalletApplication extends Application
 	public AppPlatformDBHelper getAppPlatformDBHelper()
 	{
 		return appPlatformDBHelper;
+	}
+	
+	public RequestQueue getVolleyRequestQueue()
+	{
+		return volleyRequestQueue;
 	}
 
 	private void loadWalletFromProtobuf()

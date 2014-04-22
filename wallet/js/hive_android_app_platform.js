@@ -1,6 +1,8 @@
 /* Substrate layer to allow callback functions in calls to the Hive API */
 var bitcoin = (function() {
     var MAX_CALLBACK_ID = 2147483647;
+    var CALLBACK_TYPE_SIMPLE = 0;
+    var CALLBACK_TYPE_MAKE_REQUEST = 1;
     var nextCallbackId = 0;
     var callbacks = {};
     var listeners = [];
@@ -21,7 +23,20 @@ var bitcoin = (function() {
         var args = Array.prototype.slice.call(arguments, 2);
 
         args.unshift(callbackId);
-        callbacks[callbackId] = callback;
+        callbacks[callbackId] = { 'type': CALLBACK_TYPE_SIMPLE
+                                , 'function': callback
+                                };
+        func.apply(__bitcoin, args);
+    };
+
+    var withMakeRequestCallback = function(func, options, params) {
+        var callbackId = nextId();
+        var args = Array.prototype.slice.call(arguments, 2);
+
+        args.unshift(callbackId)
+        callbacks[callbackId] = { 'type': CALLBACK_TYPE_MAKE_REQUEST
+                                , 'options': options
+                                };
         func.apply(__bitcoin, args);
     };
 
@@ -34,13 +49,62 @@ var bitcoin = (function() {
 
         __callbackFromAndroid: function(callbackId, params) {
             var callback = callbacks[callbackId];
-
-            if (callback && typeof(callback) === 'function') {
-                args = Array.prototype.slice.call(arguments, 1);
-                callback.apply(null, args);
-            }
-
             delete callbacks[callbackId];
+
+            if (!callback)
+                return;
+
+            type = callback['type'];
+            switch (type) {
+                case CALLBACK_TYPE_SIMPLE:
+                    func = callback['function'];
+                    if (!func || typeof(func) !== 'function')
+                        return
+
+                    args = Array.prototype.slice.call(arguments, 1);
+                    func.apply(null, args);
+
+                    break;
+                case CALLBACK_TYPE_MAKE_REQUEST:
+                    options = callback['options'];
+                    if (!options)
+                        return;
+
+                    success = options['success'];
+                    error = options['error'];
+                    complete = options['complete'];
+
+                    dataType = options['dataType'];
+                    forceJSON = dataType && dataType.toLowerCase() === 'json';
+
+                    wasSuccessful = arguments[1];
+                    if (wasSuccessful) {
+                        contentType = arguments[2];
+                        args = Array.prototype.slice.call(arguments, 3);
+
+                        args[0] = atob(args[0]);
+                        if (contentType.toLowerCase().indexOf("json") >= 0
+                                || forceJSON) {
+                            args[0] = JSON.parse(args[0]);
+                        }
+
+                        if (success && typeof(success) === 'function')
+                            success.apply(null, args);
+
+                        if (complete && typeof(complete) === 'function')
+                            complete.apply(null, args);
+                    } else {
+                        args = Array.prototype.slice.call(arguments, 2);
+                        args[0] = atob(args[0]);
+
+                        if (error && typeof(error) === 'function')
+                            error.apply(null, args);
+
+                        if (complete && typeof(complete) === 'function')
+                            complete.apply(null, args);
+                    }
+                    break;
+            }
         },
 
         __exchangeRateUpdateFromAndroid: function(rates) {
@@ -110,6 +174,27 @@ var bitcoin = (function() {
 
         updateExchangeRate: function(currency) {
             __bitcoin.updateExchangeRate(currency);
+        },
+
+        makeRequest: function(url, options) {
+            type = options['type'];
+            if (!type)
+                type = "GET";
+
+            data = options['data'];
+            if (!data) {
+                data = "";
+            } else if (typeof(data) === 'object') {
+                var params = [];
+                for (key in data) {
+                    params.push(encodeURIComponent(key) + '='
+                            + encodeURIComponent(data[key]));
+                }
+                data = params.join('&');
+            }
+
+            withMakeRequestCallback(__bitcoin.makeRequest,
+                    options, url, type, data);
         }
     }
 }());

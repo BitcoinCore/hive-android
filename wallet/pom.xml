@@ -151,6 +151,13 @@
 			<version>2.2.0</version>
 		</dependency>
 
+		<!-- com.mcxiaoke.volley.* -->
+		<dependency>
+			<groupId>com.mcxiaoke.volley</groupId>
+			<artifactId>library</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>

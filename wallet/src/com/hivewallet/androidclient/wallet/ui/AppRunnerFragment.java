@@ -36,6 +36,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,6 +44,11 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.android.volley.NetworkResponse;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.AddressFormatException;
 import com.google.bitcoin.core.ScriptException;
@@ -63,6 +69,8 @@ import com.hivewallet.androidclient.wallet.ui.send.SendCoinsActivity;
 import com.hivewallet.androidclient.wallet.util.AppInstaller;
 import com.hivewallet.androidclient.wallet.util.AppPlatformDBHelper;
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
+import com.hivewallet.androidclient.wallet.util.StringPlus;
+import com.hivewallet.androidclient.wallet.util.StringPlusRequest;
 import com.hivewallet.androidclient.wallet_test.R;
 
 @SuppressLint("SetJavaScriptEnabled")
@@ -241,7 +249,6 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 				if (Constants.APP_STORE_ID.equals(appId)) {
 					try
 					{
-						log.info("Accessing asset file: {}", path);
 						is = activity.getAssets().open(Constants.APP_STORE_ID + path);
 					}
 					catch (IOException ignored) { }
@@ -306,10 +313,12 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 	
 	private static class AppPlatformApi implements AppInstaller.AppInstallCallback {
 		private static final Logger log = LoggerFactory.getLogger(AppPlatformApi.class);
+		private static final String VOLLEY_TAG = "volley_tag";
 		
 		private WalletApplication application;
 		private Configuration config;
 		private Fragment fragment;
+		private Activity activity;
 		private WebView webView;
 		
 		volatile private long lastSendMoneyCallbackId = -1;
@@ -326,6 +335,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			this.application = (WalletApplication)fragment.getActivity().getApplication();
 			this.config = application.getConfiguration();
 			this.fragment = fragment;
+			this.activity = fragment.getActivity();
 			this.webView = webView;
 			this.appPlatformDBHelper = application.getAppPlatformDBHelper();
 		}
@@ -404,7 +414,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			if (address != null)
 				paymentIntent = PaymentIntent.fromAddressAndAmount(address, amount);
 			
-			final Intent intent = new Intent(fragment.getActivity(), SendCoinsActivity.class);
+			final Intent intent = new Intent(activity, SendCoinsActivity.class);
 			if (paymentIntent != null)
 				intent.putExtra(SendCoinsActivity.INTENT_EXTRA_PAYMENT_INTENT, paymentIntent);
 			
@@ -491,6 +501,76 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 														// as soon as we receive it
 		}
 		
+		@SuppressWarnings("unused")
+		public void makeRequest(long callbackId, String url, String method, String data) {
+			final long myCallbackId = callbackId;
+			
+			boolean appendDataToURL = method.equalsIgnoreCase("get")
+					|| method.equalsIgnoreCase("head")
+					|| method.equalsIgnoreCase("delete");
+			if (appendDataToURL && !data.isEmpty())
+				url += "?" + data;
+			
+			Uri uri = Uri.parse(url);
+			if (uri == null) {
+				performCallback(myCallbackId, "false", "''", "500", "'Invalid URL'");
+				return;
+			}
+			
+			int methodCode;
+			if (method.equalsIgnoreCase("get"))
+				methodCode = Request.Method.GET;
+			else if (method.equalsIgnoreCase("head"))
+				methodCode = Request.Method.HEAD;
+			else if (method.equalsIgnoreCase("delete"))
+				methodCode = Request.Method.DELETE;
+			else if (method.equalsIgnoreCase("post"))
+				methodCode = Request.Method.POST;
+			else if (method.equalsIgnoreCase("put"))
+				methodCode = Request.Method.PUT;
+			else {
+				performCallback(myCallbackId, "false", "''", "500", "'Invalid HTTP method'");
+				return;
+			}
+			
+			byte[] postData = null;
+			if (!appendDataToURL)
+				postData = data.getBytes();
+			
+			RequestQueue rq = application.getVolleyRequestQueue();
+			StringPlusRequest sr = new StringPlusRequest(methodCode, uri.toString(), new Response.Listener<StringPlus>()
+			{
+				@Override
+				public void onResponse(StringPlus responsePlus)
+				{
+					String response = responsePlus.getString();
+					String encodedResponse = Base64.encodeToString(response.getBytes(), Base64.NO_WRAP);
+					
+					performCallback(myCallbackId, "true",
+							"'" + responsePlus.getContentType() + "'", "'" + encodedResponse + "'", "200");
+				}
+			}, new Response.ErrorListener()
+			{
+				@Override
+				public void onErrorResponse(VolleyError error)
+				{
+					int status = 500;
+					String encodedResponse = "";
+					
+					NetworkResponse networkResponse = error.networkResponse;
+					if (networkResponse != null) {
+						status = networkResponse.statusCode;
+						encodedResponse = Base64.encodeToString(networkResponse.data, Base64.NO_WRAP);
+					}
+					
+					performCallback(myCallbackId, "false",
+							"'" + encodedResponse + "'", Integer.toString(status), "'" + error.getMessage() + "'");
+				}
+			}, postData);
+			sr.setTag(VOLLEY_TAG);
+			rq.add(sr);
+		}
+		
 		synchronized private void maybeForwardExchangeRateUpdates() {
 			maybeForwardExchangeRateUpdates(null);
 		}
@@ -574,7 +654,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			
 			final String furtherArguments = Joiner.on(',').join(arguments);
 			final String js = "javascript:bitcoin.__callbackFromAndroid(" + callbackId + "," + furtherArguments + ");";
-			fragment.getActivity().runOnUiThread(new Runnable()
+			activity.runOnUiThread(new Runnable()
 			{
 				@Override
 				public void run()
@@ -586,7 +666,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 		
 		private void forwardExchangeRateUpdate(String update) {
 			final String js = "javascript:bitcoin.__exchangeRateUpdateFromAndroid(" + update + ");";
-			fragment.getActivity().runOnUiThread(new Runnable()
+			activity.runOnUiThread(new Runnable()
 			{
 				@Override
 				public void run()
@@ -604,6 +684,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 		public void onPause() {
 			if (appInstaller != null)
 				appInstaller.cancel();
+			application.getVolleyRequestQueue().cancelAll(VOLLEY_TAG);
 		}
 		
 		private static String toJSDataStructure(Map<String, String> entries) {
