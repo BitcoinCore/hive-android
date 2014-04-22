@@ -1,5 +1,5 @@
 /* Substrate layer to allow callback functions in calls to the Hive API */
-var bitcoin = (function(Zepto) {
+var bitcoin = (function() {
     var MAX_CALLBACK_ID = 2147483647;
     var nextCallbackId = 0;
     var callbacks = {};
@@ -82,11 +82,6 @@ var bitcoin = (function(Zepto) {
                 withCallback(__bitcoin.sendMoney2, callback, address);
         },
 
-        makeRequest: function(url, options) {
-            options['url'] = url;
-            Zepto.ajax(options);
-        },
-
         getApplication: function(appId, callback) {
             withCallback(__bitcoin.getApplication, callback, appId);
         },
@@ -117,4 +112,4 @@ var bitcoin = (function(Zepto) {
             __bitcoin.updateExchangeRate(currency);
         }
     }
-}(Zepto));
+}());
