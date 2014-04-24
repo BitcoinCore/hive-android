@@ -44,10 +44,12 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.AddressFormatException;
@@ -537,6 +539,9 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			if (!appendDataToURL)
 				postData = data.getBytes();
 			
+			RetryPolicy retryPolicy = new DefaultRetryPolicy(15 * 1000,
+					DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+			
 			RequestQueue rq = application.getVolleyRequestQueue();
 			StringPlusRequest sr = new StringPlusRequest(methodCode, uri.toString(), new Response.Listener<StringPlus>()
 			{
@@ -567,6 +572,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 							"'" + encodedResponse + "'", Integer.toString(status), "'" + error.getMessage() + "'");
 				}
 			}, postData);
+			sr.setRetryPolicy(retryPolicy);
 			sr.setTag(VOLLEY_TAG);
 			rq.add(sr);
 		}
