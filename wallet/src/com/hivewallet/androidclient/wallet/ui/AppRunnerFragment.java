@@ -142,7 +142,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 
 		webView.setWebViewClient(new AppPlatformWebViewClient(activity, appId, appBaseURL));
 		webView.addJavascriptInterface(new AppPlatformApiLoader(platformJS), "hive");
-		appPlatformApi = new AppPlatformApi(this, webView);
+		appPlatformApi = new AppPlatformApi(this, webView, appId);
 		webView.addJavascriptInterface(appPlatformApi, "__bitcoin");
 		
 		webView.getSettings().setJavaScriptEnabled(true);
@@ -332,7 +332,9 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 		private AppPlatformDBHelper appPlatformDBHelper;
 		private AppInstaller appInstaller;
 		
-		public AppPlatformApi(Fragment fragment, WebView webView)
+		private List<String> accessedHosts;
+		
+		public AppPlatformApi(Fragment fragment, WebView webView, String appId)
 		{
 			this.application = (WalletApplication)fragment.getActivity().getApplication();
 			this.config = application.getConfiguration();
@@ -340,6 +342,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			this.activity = fragment.getActivity();
 			this.webView = webView;
 			this.appPlatformDBHelper = application.getAppPlatformDBHelper();
+			this.accessedHosts = appPlatformDBHelper.getAccessedHosts(appId);
 		}
 		
 		@SuppressWarnings("unused")
@@ -516,6 +519,12 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			Uri uri = Uri.parse(url);
 			if (uri == null) {
 				performCallback(myCallbackId, "false", "''", "500", "'Invalid URL'");
+				return;
+			}
+			
+			String host = uri.getHost().toLowerCase(Locale.US);
+			if (!accessedHosts.contains(host)) {
+				performCallback(myCallbackId, "false", "''", "403", "'Host not listed in manifest file'");
 				return;
 			}
 			
