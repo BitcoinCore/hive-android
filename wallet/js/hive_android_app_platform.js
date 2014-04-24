@@ -1,5 +1,7 @@
 /* Substrate layer to allow callback functions in calls to the Hive API */
 var bitcoin = (function() {
+    var API_VERSION_MAJOR = 0;
+    var API_VERSION_MINOR = 2;
     var MAX_CALLBACK_ID = 2147483647;
     var CALLBACK_TYPE_SIMPLE = 0;
     var CALLBACK_TYPE_MAKE_REQUEST = 1;
@@ -46,6 +48,8 @@ var bitcoin = (function() {
         UBTC_IN_SATOSHI: 100,
         TX_TYPE_INCOMING: 'incoming',
         TX_TYPE_OUTGOING: 'outgoing',
+        apiVersionMajor: API_VERSION_MAJOR,
+        apiVersionMinor: API_VERSION_MINOR,
 
         __callbackFromAndroid: function(callbackId, params) {
             var callback = callbacks[callbackId];
