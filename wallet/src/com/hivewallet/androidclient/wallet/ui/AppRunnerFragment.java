@@ -244,7 +244,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			if (baseURL.equalsIgnoreCase(appBaseURL)) {
 				// simulate virtual host
 				String path = uri.getPath();
-				if (path == null)
+				if (path == null || path.isEmpty() || path.equals("/"))
 					path = "index.html";
 				
 				InputStream is = null;
