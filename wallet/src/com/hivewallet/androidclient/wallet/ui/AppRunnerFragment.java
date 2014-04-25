@@ -404,6 +404,18 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			return amount.longValue();
 		}
 		
+		@SuppressWarnings("unused")
+		public String userStringForCurrencyValue(long longAmount) {
+			BigInteger amount = BigInteger.valueOf(longAmount);
+			return GenericUtils.formatValue(amount, Constants.LOCAL_PRECISION, 0);
+		}
+		
+		@SuppressWarnings("unused")
+		public long valueFromUserString(String amountStr) {
+			BigInteger amount = GenericUtils.parseValue(amountStr, 0);
+			return amount.longValue();
+		}
+		
 		public void sendMoney1(long callbackId, String addressStr, long amountLong) {
 			Address address = null;
 			

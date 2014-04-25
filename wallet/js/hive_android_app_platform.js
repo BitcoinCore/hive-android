@@ -143,6 +143,14 @@ var bitcoin = (function() {
             return __bitcoin.satoshiFromUserString(amountStr);
         },
 
+        userStringForCurrencyValue: function(amount, currency) {
+            return __bitcoin.userStringForCurrencyValue(amount);
+        },
+
+        valueFromUserString: function(amountStr) {
+            return __bitcoin.valueFromUserString(amountStr);
+        },
+
         sendMoney: function(address, amount, callback) {
             if (amount)
                 withCallback(__bitcoin.sendMoney1, callback, address, amount);
