@@ -269,15 +269,23 @@ public class TransactionsListAdapter extends BaseAdapter
 		}
 		else if (confidenceType == ConfidenceType.BUILDING)
 		{
-			rowConfidenceCircular.setVisibility(View.VISIBLE);
-			rowConfidenceTextual.setVisibility(View.GONE);
-
-			rowConfidenceCircular.setProgress(confidence.getDepthInBlocks());
-			rowConfidenceCircular.setMaxProgress(isCoinBase ? Constants.NETWORK_PARAMETERS.getSpendableCoinbaseDepth()
-					: Constants.MAX_NUM_CONFIRMATIONS);
-			rowConfidenceCircular.setSize(1);
-			rowConfidenceCircular.setMaxSize(1);
-			rowConfidenceCircular.setColors(colorCircularBuilding, Color.DKGRAY);
+			final int depth = confidence.getDepthInBlocks();
+			final int maxProgress = isCoinBase ? Constants.NETWORK_PARAMETERS.getSpendableCoinbaseDepth()
+					: Constants.MAX_NUM_CONFIRMATIONS;
+			
+			if (depth <= maxProgress) {
+				rowConfidenceCircular.setVisibility(View.VISIBLE);
+				rowConfidenceTextual.setVisibility(View.GONE);
+	
+				rowConfidenceCircular.setProgress(depth);
+				rowConfidenceCircular.setMaxProgress(maxProgress);
+				rowConfidenceCircular.setSize(1);
+				rowConfidenceCircular.setMaxSize(1);
+				rowConfidenceCircular.setColors(colorCircularBuilding, Color.DKGRAY);
+			} else {
+				rowConfidenceCircular.setVisibility(View.GONE);
+				rowConfidenceTextual.setVisibility(View.GONE);
+			}
 		}
 		else if (confidenceType == ConfidenceType.DEAD)
 		{
