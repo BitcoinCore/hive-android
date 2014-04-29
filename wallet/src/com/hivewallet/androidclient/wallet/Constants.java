@@ -126,8 +126,7 @@ public final class Constants
 
 	public static final int SDK_DEPRECATED_BELOW = Build.VERSION_CODES.ICE_CREAM_SANDWICH;
 
-	public static final boolean BUG_OPENSSL_HEARTBLEED = Build.VERSION.SDK_INT == Constants.SDK_JELLY_BEAN
-			&& Build.VERSION.RELEASE.startsWith("4.1.1");
+	public static final boolean BUG_OPENSSL_HEARTBLEED = false;
 
 	public static final int MEMORY_CLASS_LOWEND = 48;
 
