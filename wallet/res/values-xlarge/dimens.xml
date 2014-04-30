@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+	<dimen name="font_size_xtiny">12sp</dimen>
 	<dimen name="font_size_tiny">14sp</dimen>
 	<dimen name="font_size_small">18sp</dimen>
 	<dimen name="font_size_normal">22sp</dimen>
@@ -8,6 +9,7 @@
 	<dimen name="font_size_xlarge">34sp</dimen>
 	<dimen name="font_size_huge">50sp</dimen>
 	<dimen name="symbol_size_normal">17sp</dimen>
+	<dimen name="symbol_size_small">13sp</dimen>
 	<dimen name="list_entry_padding_horizontal">16dp</dimen>
 	<dimen name="list_entry_padding_horizontal_lax">25dp</dimen>
 	<dimen name="list_entry_padding_vertical">12dp</dimen>
