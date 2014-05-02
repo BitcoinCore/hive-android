@@ -207,6 +207,7 @@
 			android:authorities="com.hivewallet.androidclient.wallet_test.exchange_rates"
 			android:exported="false" />
 
+		<!--
 		<receiver
 			android:name="com.hivewallet.androidclient.wallet.WalletBalanceWidgetProvider"
 			android:label="Bitcoin Wallet Balance" >
@@ -218,6 +219,7 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wallet_balance_widget" />
 		</receiver>
+		 -->
 
 		<service
 			android:name="com.hivewallet.androidclient.wallet.service.BlockchainServiceImpl"
