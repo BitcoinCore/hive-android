@@ -138,6 +138,7 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 				}
 			}
 		}
+		cursor.close();
 		return accessedHosts;
 	}
 	
@@ -159,8 +160,10 @@ public class AppPlatformDBHelper extends SQLiteOpenHelper
 					manifest.put(key,  "'" + value + "'");
 				}
 			}
+			cursor.close();
 			return manifest;
 		} else {
+			cursor.close();
 			return null;
 		}
 	}
