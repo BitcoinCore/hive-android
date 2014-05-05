@@ -1,26 +1,19 @@
 package com.hivewallet.androidclient.wallet.ui;
 
-import javax.annotation.Nullable;
-
 import com.actionbarsherlock.app.SherlockFragment;
 import com.google.bitcoin.core.AddressFormatException;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
-import com.hivewallet.androidclient.wallet.ui.TransactionsListFragment.Direction;
-import com.hivewallet.androidclient.wallet.util.PhoneContactPictureLookupService;
 import com.hivewallet.androidclient.wallet_test.R;
+import com.squareup.picasso.Picasso;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,8 +32,6 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 	private ImageButton addContactImageButton;
 	
 	private SimpleCursorAdapter contactsSimpleCursorAdapter;
-	
-	private int photoTagCounter = 0;
 	
 	public static ContactsFragment instance()
 	{
@@ -63,7 +54,7 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 		super.onActivityCreated(savedInstanceState);
 
 		final String[] from_columns = { AddressBookProvider.KEY_LABEL
-									  , AddressBookProvider.KEY_LABEL
+									  , AddressBookProvider.KEY_PHOTO
 									  , AddressBookProvider.KEY_ADDRESS
 									  };
 		final int[] to_ids = { R.id.tv_contact_name, R.id.iv_contact_photo, R.id.ib_contact_send_money };
@@ -92,26 +83,14 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 			}
 			
 			private boolean setContactPhoto(ImageView imageView, Cursor cursor, int columnIndex) {
-				String label = cursor.getString(columnIndex);
+				String photo = cursor.getString(columnIndex);
+				Uri uri = Uri.parse(photo);
 				
-				// set placeholder image
-				imageView.setImageResource(R.drawable.ic_contact_picture);
+				Picasso.with(activity)
+					.load(uri)
+					.placeholder(R.drawable.ic_contact_picture)
+					.into(imageView);
 				
-				// tag the image view
-				String tag = label + photoTagCounter;
-				imageView.setTag(tag);
-				
-				// increase tag counter
-				photoTagCounter++;
-				if (photoTagCounter == Integer.MAX_VALUE)
-					photoTagCounter = 0;				
-				
-				// request picture lookup
-				Intent intent = new Intent(activity, PhoneContactPictureLookupService.class);
-				intent.putExtra(PhoneContactPictureLookupService.LABEL, label);
-				intent.putExtra(PhoneContactPictureLookupService.TAG, tag);
-				activity.startService(intent);
-	    	
 		    	return true;
 			}
 			
@@ -153,23 +132,6 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 		this.activity = (WalletActivity) activity;
 	}
 	
-	@Override
-	public void onResume()
-	{
-		super.onResume();
-		
-		IntentFilter iff = new IntentFilter(PhoneContactPictureLookupService.ACTION);
-		LocalBroadcastManager.getInstance(activity).registerReceiver(broadcastReceiver, iff);
-	}
-	
-	@Override
-	public void onPause()
-	{
-		super.onPause();
-		
-		LocalBroadcastManager.getInstance(activity).unregisterReceiver(broadcastReceiver);
-	}
-
 	private OnClickListener addContactOnClickListener = new OnClickListener()
 	{
 		@Override
@@ -206,19 +168,4 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 	{
 		contactsSimpleCursorAdapter.swapCursor(null);
 	}
-	
-	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver()
-	{
-		@Override
-		public void onReceive(Context context, Intent intent)
-		{
-			String tag = intent.getStringExtra(PhoneContactPictureLookupService.TAG);
-			Uri uri = Uri.parse(intent.getStringExtra(PhoneContactPictureLookupService.URI));
-			
-			View view = contactsListView.findViewWithTag(tag);
-			if (view != null) {
-				((ImageView)view).setImageURI(uri);
-			}
-		}
-	};
 }
