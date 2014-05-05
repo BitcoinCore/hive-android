@@ -40,6 +40,7 @@ public class AddressBookProvider extends ContentProvider
 	public static final String KEY_ROWID = "_id";
 	public static final String KEY_ADDRESS = "address";
 	public static final String KEY_LABEL = "label";
+	public static final String KEY_PHOTO = "photo";
 
 	public static final String SELECTION_QUERY = "q";
 	public static final String SELECTION_IN = "in";
@@ -198,12 +199,18 @@ public class AddressBookProvider extends ContentProvider
 	private static class Helper extends SQLiteOpenHelper
 	{
 		private static final String DATABASE_NAME = "address_book";
-		private static final int DATABASE_VERSION = 1;
+		private static final int DATABASE_VERSION = 2;
 
 		private static final String DATABASE_CREATE = "CREATE TABLE " + DATABASE_TABLE + " (" //
 				+ KEY_ROWID + " INTEGER PRIMARY KEY AUTOINCREMENT, " //
 				+ KEY_ADDRESS + " TEXT NOT NULL, " //
-				+ KEY_LABEL + " TEXT NULL);";
+				+ KEY_LABEL + " TEXT NULL, " //
+				+ KEY_PHOTO + " TEXT NULL);";
+		private static final String INDEX_CREATE = "CREATE INDEX " + DATABASE_TABLE + "_idx1 on " //
+				+ DATABASE_TABLE + " (" + KEY_ADDRESS + ");";
+		
+		private static final String UPGRADE1 = "ALTER TABLE " + DATABASE_TABLE + " " //
+				+ " ADD " + KEY_PHOTO + " TEXT NULL;";
 
 		public Helper(final Context context)
 		{
@@ -214,6 +221,7 @@ public class AddressBookProvider extends ContentProvider
 		public void onCreate(final SQLiteDatabase db)
 		{
 			db.execSQL(DATABASE_CREATE);
+			db.execSQL(INDEX_CREATE);
 		}
 
 		@Override
@@ -237,7 +245,8 @@ public class AddressBookProvider extends ContentProvider
 		{
 			if (oldVersion == 1)
 			{
-				// future
+				db.execSQL(UPGRADE1);
+				db.execSQL(INDEX_CREATE);
 			}
 			else
 			{
