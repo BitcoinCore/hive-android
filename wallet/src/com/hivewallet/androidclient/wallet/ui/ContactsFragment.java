@@ -84,7 +84,9 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 			
 			private boolean setContactPhoto(ImageView imageView, Cursor cursor, int columnIndex) {
 				String photo = cursor.getString(columnIndex);
-				Uri uri = Uri.parse(photo);
+				Uri uri = null;
+				if (photo != null)
+					uri = Uri.parse(photo);
 				
 				Picasso.with(activity)
 					.load(uri)
