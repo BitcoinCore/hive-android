@@ -139,8 +139,7 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 		@Override
 		public void onClick(View v)
 		{
-			Intent intent = new Intent(getActivity(), AddContactActivity.class);
-			startActivity(intent);
+			AddContactChoiceFragment.show(getFragmentManager());
 		}
 	};
 

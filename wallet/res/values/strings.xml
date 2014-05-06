@@ -291,4 +291,7 @@
 	<string name="app_icon">App icon</string>
 	<string name="wallet_address_dialog_copy_address">Bitcoin address copied to clipboard</string>
 	<string name="wallet_address_dialog_share_address">Share Bitcoin address via</string>
+	<string name="add_contact_choice">Add contact</string>
+	<string name="add_contact_choice_qr">via Bitcoin address from QR code</string>
+	<string name="add_contact_choice_clipboard">via Bitcoin address from clipboard</string>
 </resources>

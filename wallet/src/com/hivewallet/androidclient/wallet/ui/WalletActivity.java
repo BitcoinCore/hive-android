@@ -118,6 +118,8 @@ public final class WalletActivity extends AbstractWalletActivity
 	private Wallet wallet;
 
 	private static final int REQUEST_CODE_SCAN = 0;
+	public static final int REQUEST_CODE_SCAN_ADD_CONTACT = 1;
+	private String addContactScanResult = null;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState)
@@ -146,6 +148,14 @@ public final class WalletActivity extends AbstractWalletActivity
 		getWalletApplication().startBlockchainService(true);
 
 		checkLowStorageAlert();
+	}
+	
+	@Override
+	protected void onPostResume()
+	{
+		super.onPostResume();
+
+		handleAddContactScan();
 	}
 
 	@Override
@@ -214,6 +224,11 @@ public final class WalletActivity extends AbstractWalletActivity
 					dialog(WalletActivity.this, null, R.string.button_scan, messageResId, messageArgs);
 				}
 			}.parse();
+		}
+		
+		if (requestCode == REQUEST_CODE_SCAN_ADD_CONTACT && resultCode == Activity.RESULT_OK)
+		{
+			addContactScanResult = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
 		}
 	}
 
@@ -350,6 +365,37 @@ public final class WalletActivity extends AbstractWalletActivity
 			throw new RuntimeException(x);
 		}
 	}
+	
+	private void handleAddContactScan()
+	{
+		if (addContactScanResult == null) return;
+		final String scanResult = new String(addContactScanResult);
+		addContactScanResult = null;
+		
+		new StringInputParser(scanResult)
+		{
+			@Override
+			protected void handlePaymentIntent(final PaymentIntent paymentIntent)
+			{
+				if (paymentIntent.hasAddress())
+					EditAddressBookEntryFragment.edit(getSupportFragmentManager(), paymentIntent.getAddress().toString());
+				else
+					dialog(WalletActivity.this, null, R.string.address_book_options_scan_title, R.string.address_book_options_scan_invalid);
+			}
+
+			@Override
+			protected void handleDirectTransaction(final Transaction transaction)
+			{
+				cannotClassify(scanResult);
+			}
+
+			@Override
+			protected void error(final int messageResId, final Object... messageArgs)
+			{
+				dialog(WalletActivity.this, null, R.string.address_book_options_scan_title, messageResId, messageArgs);
+			}
+		}.parse();		
+	}	
 
 	@Override
 	protected Dialog onCreateDialog(final int id, final Bundle args)
