@@ -35,11 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.database.ContentObserver;
@@ -54,12 +52,10 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.SpannableStringBuilder;
 import android.text.format.DateUtils;
 import android.text.style.StyleSpan;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.actionbarsherlock.app.SherlockListFragment;
@@ -83,7 +79,6 @@ import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 import com.hivewallet.androidclient.wallet.util.BitmapFragment;
 import com.hivewallet.androidclient.wallet.util.Nfc;
-import com.hivewallet.androidclient.wallet.util.PhoneContactPictureLookupService;
 import com.hivewallet.androidclient.wallet.util.Qr;
 import com.hivewallet.androidclient.wallet.util.ThrottlingWalletChangeListener;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
@@ -139,7 +134,7 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 		@Override
 		public void onChange(final boolean selfChange)
 		{
-			adapter.clearLabelCache();
+			adapter.clearAddressBookCache();
 		}
 	};
 
@@ -183,9 +178,6 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 		loaderManager.initLoader(ID_TX_LOADER, null, this);
 		loaderManager.initLoader(ID_RATE_LOADER, null, rateLoaderCallbacks);
 		
-		IntentFilter iff = new IntentFilter(PhoneContactPictureLookupService.ACTION);
-		LocalBroadcastManager.getInstance(activity).registerReceiver(broadcastReceiver, iff);		
-
 		wallet.addEventListener(transactionChangeListener, Threading.SAME_THREAD);
 
 		updateView();
@@ -215,8 +207,6 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 		loaderManager.destroyLoader(ID_TX_LOADER);
 		loaderManager.destroyLoader(ID_RATE_LOADER);
 		
-		LocalBroadcastManager.getInstance(activity).unregisterReceiver(broadcastReceiver);
-
 		config.unregisterOnSharedPreferenceChangeListener(this);
 
 		resolver.unregisterContentObserver(addressBookObserver);
@@ -509,26 +499,6 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 		}
 	};
 	
-	private BroadcastReceiver broadcastReceiver = new BroadcastReceiver()
-	{
-		@Override
-		public void onReceive(Context context, Intent intent)
-		{
-			String label = intent.getStringExtra(PhoneContactPictureLookupService.LABEL);
-			String tag = intent.getStringExtra(PhoneContactPictureLookupService.TAG);
-			Uri uri = Uri.parse(intent.getStringExtra(PhoneContactPictureLookupService.URI));
-
-			adapter.supplyContactPhoto(label, uri);
-			
-			try {
-				View view = getListView().findViewWithTag(tag);
-				if (view != null) {
-					((ImageView)view).setImageURI(uri);
-				}
-			} catch (IllegalStateException ignored) { /* do nothing if the ListView is not ready yet */ }
-		}
-	};	
-
 	@Override
 	public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key)
 	{
@@ -543,6 +513,6 @@ public class TransactionsListFragment extends SherlockListFragment implements Lo
 
 		adapter.setPrecision(btcPrecision, btcShift);
 		adapter.setCurrencyCode(config.getBtcPrefix());
-		adapter.clearLabelCache();
+		adapter.clearAddressBookCache();
 	}
 }

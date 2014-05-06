@@ -28,7 +28,6 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.Uri;
@@ -48,15 +47,17 @@ import com.google.bitcoin.core.TransactionConfidence;
 import com.google.bitcoin.core.TransactionConfidence.ConfidenceType;
 import com.google.bitcoin.core.Wallet;
 import com.google.bitcoin.wallet.DefaultCoinSelector;
+import com.google.common.base.Optional;
 
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
+import com.hivewallet.androidclient.wallet.AddressBookProvider.AddressBookEntry;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 import com.hivewallet.androidclient.wallet.util.CircularProgressView;
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
-import com.hivewallet.androidclient.wallet.util.PhoneContactPictureLookupService;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
 import com.hivewallet.androidclient.wallet_test.R;
+import com.squareup.picasso.Picasso;
 
 /**
  * @author Andreas Schildbach
@@ -81,20 +82,14 @@ public class TransactionsListAdapter extends BaseAdapter
 	private final int colorError;
 	private final int colorCircularBuilding = Color.parseColor("#44ff44");
 
-	private final Map<String, String> labelCache = new HashMap<String, String>();
-	private final static String CACHE_NULL_MARKER = "";
+	private final Map<String, Optional<AddressBookEntry>> addressBookCache = new HashMap<String, Optional<AddressBookEntry>>();
 	
-	private final Map<String, Uri> photoCache = new HashMap<String, Uri>();
-	private int photoTagCounter = 0; 
-
 	private static final String CONFIDENCE_SYMBOL_DEAD = "\u271D"; // latin cross
 	private static final String CONFIDENCE_SYMBOL_UNKNOWN = "?";
 
 	private static final int VIEW_TYPE_TRANSACTION = 0;
 	private static final int VIEW_TYPE_WARNING = 1;
 	
-	private static final Uri NO_PHOTO_URI = Uri.parse("photo:no_photo");	// magic marker
-
 	public TransactionsListAdapter(final Context context, @Nonnull final Wallet wallet, final int maxConnectedPeers, final boolean showBackupWarning)
 	{
 		this.context = context;
@@ -336,10 +331,12 @@ public class TransactionsListAdapter extends BaseAdapter
 
 		// address, if it can be identified
 		final Address address = sent ? WalletUtils.getFirstToAddress(tx) : WalletUtils.getFirstFromAddress(tx);
+		AddressBookEntry entry = null;
 		String label = null;
 		String suffixData = null;
 		if (address != null) {
-			label = resolveLabel(address.toString());
+			entry = lookupEntry(address.toString());
+			if (entry != null) label = entry.getLabel();
 			suffixData = label != null ? label : GenericUtils.shortenString(address.toString());
 		}
 		
@@ -385,10 +382,12 @@ public class TransactionsListAdapter extends BaseAdapter
 
 		// contact photo
 		final ImageView rowContactPhoto = (ImageView) row.findViewById(R.id.transaction_row_contact_photo);
-		if (label != null)
-			handleContactPhoto(rowContactPhoto, label);
-		else
-			rowContactPhoto.setImageResource(R.drawable.ic_contact_picture);
+		Uri photoUri = null;
+		if (entry != null) photoUri = entry.getPhotoUri();
+		Picasso.with(context)
+			.load(photoUri)
+			.placeholder(R.drawable.ic_contact_picture)
+			.into(rowContactPhoto);
 
 		// extended message
 		final View rowExtend = row.findViewById(R.id.transaction_row_extend);
@@ -443,64 +442,25 @@ public class TransactionsListAdapter extends BaseAdapter
 		}
 	}
 	
-	private void handleContactPhoto(ImageView rowContactPhoto, @Nonnull String label)
+	private AddressBookEntry lookupEntry(@Nonnull final String address)
 	{
-		Uri cachedUri = photoCache.get(label);
-		
-		if (cachedUri == NO_PHOTO_URI)
+		final Optional<AddressBookEntry> cachedEntry = addressBookCache.get(address);
+		if (cachedEntry == null)
 		{
-			rowContactPhoto.setImageResource(R.drawable.ic_contact_picture);
-		}
-		else if (cachedUri != null)
-		{
-			rowContactPhoto.setImageURI(cachedUri);
+			final AddressBookEntry entry = AddressBookProvider.lookupEntry(context, address);
+			final Optional<AddressBookEntry> optionalEntry = Optional.fromNullable(entry);
+			addressBookCache.put(address, optionalEntry);	// cache entry or the fact that it wasn't found
+			return entry;
 		}
 		else
 		{
-			// tag the image view
-			String tag = label + photoTagCounter;
-			rowContactPhoto.setTag(tag);
-			
-			// increase tag counter
-			photoTagCounter++;
-			if (photoTagCounter == Integer.MAX_VALUE)
-				photoTagCounter = 0;
-			
-			// request picture lookup
-			Intent intent = new Intent(context, PhoneContactPictureLookupService.class);
-			intent.putExtra(PhoneContactPictureLookupService.LABEL, label);
-			intent.putExtra(PhoneContactPictureLookupService.TAG, tag);
-			context.startService(intent);
-		}
-	}
-	
-	public void supplyContactPhoto(String label, Uri uri)
-	{
-		photoCache.put(label, uri);
-	}
-
-	private String resolveLabel(@Nonnull final String address)
-	{
-		final String cachedLabel = labelCache.get(address);
-		if (cachedLabel == null)
-		{
-			final String label = AddressBookProvider.resolveLabel(context, address);
-			if (label != null)
-				labelCache.put(address, label);
-			else
-				labelCache.put(address, CACHE_NULL_MARKER);
-			return label;
-		}
-		else
-		{
-			return cachedLabel != CACHE_NULL_MARKER ? cachedLabel : null;
+			return cachedEntry.orNull();
 		}
 	}
 
-	public void clearLabelCache()
+	public void clearAddressBookCache()
 	{
-		labelCache.clear();
-		photoCache.clear();
+		addressBookCache.clear();
 
 		notifyDataSetChanged();
 	}

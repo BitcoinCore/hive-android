@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.hivewallet.androidclient.wallet.util.PhoneContactsLookupToolkit;
 
@@ -54,24 +55,37 @@ public class AddressBookProvider extends ContentProvider
 	{
 		return Uri.parse("content://" + packageName + '.' + DATABASE_TABLE);
 	}
-
+	
 	public static String resolveLabel(final Context context, @Nonnull final String address)
 	{
+		AddressBookEntry entry = lookupEntry(context, address);
+		return entry == null ? null : entry.getLabel();
+	}
+	
+	public static AddressBookEntry lookupEntry(final Context context, @Nonnull final String address)
+	{
 		String label = null;
+		String photo = null;
 
 		final Uri uri = contentUri(context.getPackageName()).buildUpon().appendPath(address).build();
 		final Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
 
 		if (cursor != null)
 		{
-			if (cursor.moveToFirst())
-				label = cursor.getString(cursor.getColumnIndexOrThrow(AddressBookProvider.KEY_LABEL));
+			if (cursor.moveToFirst()) {
+				label = cursor.getString(cursor.getColumnIndexOrThrow(KEY_LABEL));
+				photo = cursor.getString(cursor.getColumnIndexOrThrow(KEY_PHOTO));
+			}
 
 			cursor.close();
 		}
-
-		return label;
-	}
+		
+		if (label != null) {
+			return new AddressBookEntry(address, label, photo);
+		} else {
+			return null;
+		}
+	}	
 
 	private Helper helper;
 
@@ -197,6 +211,37 @@ public class AddressBookProvider extends ContentProvider
 			qb.appendWhereEscapeString(address.trim());
 			if (!address.equals(addresses[addresses.length - 1]))
 				qb.appendWhere(",");
+		}
+	}
+	
+	public static class AddressBookEntry
+	{
+		private String address;
+		private String label;
+		private Uri photoUri;
+		
+		public AddressBookEntry(String address, String label, @Nullable String photo)
+		{
+			this.address = address;
+			this.label = label;
+			this.photoUri = null;
+			if (photo != null)
+				this.photoUri = Uri.parse(photo);
+		}
+		
+		public String getAddress()
+		{
+			return address;
+		}
+		
+		public String getLabel()
+		{
+			return label;
+		}
+		
+		public Uri getPhotoUri()
+		{
+			return photoUri;
 		}
 	}
 

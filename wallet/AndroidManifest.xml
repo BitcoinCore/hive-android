@@ -227,9 +227,6 @@
 		<service
 			android:name="com.hivewallet.androidclient.wallet.offline.AcceptBluetoothService"
 			android:exported="false" />
-		<service
-			android:name="com.hivewallet.androidclient.wallet.util.PhoneContactPictureLookupService"
-			android:exported="false" />
 
 		<receiver android:name="com.hivewallet.androidclient.wallet.service.AutosyncReceiver" >
 			<intent-filter>
