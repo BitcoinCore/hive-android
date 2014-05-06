@@ -86,6 +86,7 @@ import com.google.bitcoin.store.SPVBlockStore;
 import com.google.bitcoin.utils.Threading;
 
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
+import com.hivewallet.androidclient.wallet.AddressBookProvider.AddressBookEntry;
 import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.WalletApplication;
@@ -93,7 +94,6 @@ import com.hivewallet.androidclient.wallet.WalletBalanceWidgetProvider;
 import com.hivewallet.androidclient.wallet.ui.WalletActivity;
 import com.hivewallet.androidclient.wallet.util.CrashReporter;
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
-import com.hivewallet.androidclient.wallet.util.PhoneContactsLookupToolkit;
 import com.hivewallet.androidclient.wallet.util.ThrottlingWalletChangeListener;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
 import com.hivewallet.androidclient.wallet_test.R;
@@ -189,9 +189,11 @@ public class BlockchainServiceImpl extends android.app.Service implements Blockc
 		Bitmap photoBitmap = null;
 		if (from != null) {
 			final String addressStr = from.toString();
-			label = AddressBookProvider.resolveLabel(getApplicationContext(), addressStr);
-			if (label != null)
-				photoUri = PhoneContactsLookupToolkit.lookupPhoneContactPicture(getContentResolver(), label);
+			AddressBookEntry entry = AddressBookProvider.lookupEntry(getApplicationContext(), addressStr);
+			if (entry != null) {
+				label = entry.getLabel();
+				photoUri = entry.getPhotoUri();
+			}
 			if (photoUri != null) {
 				try
 				{
