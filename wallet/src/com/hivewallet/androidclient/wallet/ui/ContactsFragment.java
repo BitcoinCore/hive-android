@@ -73,6 +73,8 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 			public boolean setViewValue(View view, Cursor cursor, int columnIndex)
 			{
 				switch (view.getId()) {
+					case R.id.tv_contact_name:
+						return setContactName((TextView)view, cursor, columnIndex);
 					case R.id.iv_contact_photo:
 						return setContactPhoto((ImageView)view, cursor, columnIndex);
 					case R.id.ib_contact_send_money:
@@ -82,8 +84,18 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 				}
 			}
 			
+			private boolean setContactName(TextView textView, Cursor cursor, int columnIndex) {
+				final String name = cursor.getString(columnIndex);
+				final String address = cursor.getString(cursor.getColumnIndexOrThrow(AddressBookProvider.KEY_ADDRESS));
+				textView.setText(name);
+				setEditAction(textView, address);
+				
+				return true;
+			}
+			
 			private boolean setContactPhoto(ImageView imageView, Cursor cursor, int columnIndex) {
 				String photo = cursor.getString(columnIndex);
+				final String address = cursor.getString(cursor.getColumnIndexOrThrow(AddressBookProvider.KEY_ADDRESS));
 				Uri uri = null;
 				if (photo != null)
 					uri = Uri.parse(photo);
@@ -92,6 +104,8 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 					.load(uri)
 					.placeholder(R.drawable.ic_contact_picture)
 					.into(imageView);
+				
+				setEditAction(imageView, address);
 				
 		    	return true;
 			}
@@ -114,6 +128,18 @@ public class ContactsFragment extends SherlockFragment implements LoaderCallback
 					}
 				});
 				return true;
+			}
+			
+			private void setEditAction(final View view, final String address) {
+				view.setOnLongClickListener(new View.OnLongClickListener()
+				{
+					@Override
+					public boolean onLongClick(View v)
+					{
+						EditAddressBookEntryFragment.edit(getFragmentManager(), address);
+						return true;
+					}
+				});
 			}
 		});		
 						
