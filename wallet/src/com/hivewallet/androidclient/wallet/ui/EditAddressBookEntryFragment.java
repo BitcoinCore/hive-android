@@ -25,17 +25,22 @@ import android.app.Dialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
+import com.hivewallet.androidclient.wallet.AddressBookProvider.AddressBookEntry;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
 import com.hivewallet.androidclient.wallet_test.R;
+import com.squareup.picasso.Picasso;
 
 /**
  * @author Andreas Schildbach
@@ -43,6 +48,7 @@ import com.hivewallet.androidclient.wallet_test.R;
 public final class EditAddressBookEntryFragment extends DialogFragment
 {
 	private static final String FRAGMENT_TAG = EditAddressBookEntryFragment.class.getName();
+	private static final int REQUEST_CODE_PICK_PHOTO = 0;
 
 	private static final String KEY_ADDRESS = "address";
 	private static final String KEY_SUGGESTED_ADDRESS_LABEL = "suggested_address_label";
@@ -72,6 +78,10 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 
 	private Activity activity;
 	private ContentResolver contentResolver;
+	
+	private Uri photoUri;
+	
+	private ImageView photo;
 
 	@Override
 	public void onAttach(final Activity activity)
@@ -80,6 +90,16 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 
 		this.activity = activity;
 		this.contentResolver = activity.getContentResolver();
+	}
+	
+	private void updateImageView() {
+		if (photo == null) return;
+		
+		Picasso
+			.with(activity)
+			.load(photoUri)
+			.placeholder(R.drawable.ic_contact_picture)
+			.into(photo);
 	}
 
 	@Override
@@ -93,9 +113,14 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 
 		final Uri uri = AddressBookProvider.contentUri(activity.getPackageName()).buildUpon().appendPath(address).build();
 
-		final String label = AddressBookProvider.resolveLabel(activity, address);
-
-		final boolean isAdd = label == null;
+		final AddressBookEntry entry = AddressBookProvider.lookupEntry(activity, address);
+		String label = null;
+		if (entry != null) {
+			label = entry.getLabel();
+			photoUri = entry.getPhotoUri();
+		}
+		
+		final boolean isAdd = entry == null;
 
 		final DialogBuilder dialog = new DialogBuilder(activity);
 
@@ -108,6 +133,29 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 
 		final TextView viewLabel = (TextView) view.findViewById(R.id.edit_address_book_entry_label);
 		viewLabel.setText(label != null ? label : suggestedAddressLabel);
+		
+		photo = (ImageView) view.findViewById(R.id.iv_edit_address_photo);
+		updateImageView();
+		
+		final Button pickPhotoButton = (Button) view.findViewById(R.id.b_edit_address_pick_photo);
+		pickPhotoButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				handlePickPhoto();
+			}
+		});
+		
+		final Button clearPhotoButton = (Button) view.findViewById(R.id.b_edit_address_clear_photo);
+		clearPhotoButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				handleClearPhoto();
+			}
+		});
 
 		dialog.setView(view);
 
@@ -124,6 +172,8 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 					{
 						final ContentValues values = new ContentValues();
 						values.put(AddressBookProvider.KEY_LABEL, newLabel);
+						values.put(AddressBookProvider.KEY_PHOTO,
+								photoUri == null ? null : photoUri.toString());
 
 						if (isAdd)
 							contentResolver.insert(uri, values);
@@ -150,5 +200,30 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 		dialog.setNegativeButton(R.string.button_cancel, onClickListener);
 
 		return dialog.create();
+	}
+	
+	private void handlePickPhoto() {
+		Intent imageIntent = new Intent();
+		imageIntent.setType("image/*");
+		imageIntent.setAction(Intent.ACTION_GET_CONTENT);
+		
+		Intent choiceIntent = Intent.createChooser(imageIntent,
+				getString(R.string.edit_address_book_entry_dialog_photo_selection));
+		
+		startActivityForResult(choiceIntent, REQUEST_CODE_PICK_PHOTO);
+	}
+	
+	private void handleClearPhoto() {
+		photoUri = null;
+		updateImageView();
+	}
+	
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		if (requestCode == REQUEST_CODE_PICK_PHOTO && resultCode == Activity.RESULT_OK) {
+			photoUri = data.getData();
+			updateImageView();
+		}
 	}
 }

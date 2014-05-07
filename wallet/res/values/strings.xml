@@ -116,11 +116,15 @@
 	<string name="address_book_options_scan_title">Scan address</string>
 	<string name="address_book_options_scan_invalid">Scanned data is unrecognizable</string>
 	<string name="address_book_row_message_compromised_key">This address might be compromised. You should not use it any more for receiving coins.</string>
-	<string name="edit_address_book_entry_dialog_title_add">Add address</string>
-	<string name="edit_address_book_entry_dialog_title_edit">Edit address</string>
+	<string name="edit_address_book_entry_dialog_title_add">Add contact</string>
+	<string name="edit_address_book_entry_dialog_title_edit">Edit contact</string>
 	<string name="edit_address_book_entry_dialog_address_label">Address</string>
 	<string name="edit_address_book_entry_dialog_label_label">Name</string>
+	<string name="edit_address_book_entry_dialog_photo_label">Photo</string>
+	<string name="edit_address_book_entry_dialog_photo_selection">Select photo</string>
 	<string name="edit_address_book_entry_dialog_button_edit">Save</string>
+	<string name="edit_address_book_entry_dialog_button_pick_photo">Pick photo</string>
+	<string name="edit_address_book_entry_dialog_button_clear_photo">Clear photo</string>
 	<string name="transaction_row_message_purpose_key_rotation">This transaction strengthens your wallet against theft. &lt;u&gt;More info.&lt;/u&gt;</string>
 	<string name="transaction_row_message_own_unbroadcasted">This payment has not been transmitted yet.</string>
 	<string name="transaction_row_message_received_direct">This payment has been received directly. There is a risk it might never become spendable.</string>

@@ -60,6 +60,51 @@
 
 			<requestFocus />
 		</EditText>
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginLeft="@dimen/list_entry_padding_horizontal_lax"
+			android:layout_marginRight="@dimen/list_entry_padding_horizontal_lax"
+			android:layout_marginTop="8dp"
+			android:text="@string/edit_address_book_entry_dialog_photo_label"
+			android:textSize="@dimen/font_size_small"
+			android:textStyle="bold" />
+
+		<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:orientation="horizontal" >
+
+			<ImageView
+				android:id="@+id/iv_edit_address_photo"
+				style="@style/LargeContactPhoto"
+				android:layout_marginBottom="8dp"
+				android:contentDescription="@string/contact_photo"
+				android:src="@drawable/ic_contact_picture" />
+
+			<LinearLayout
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:orientation="vertical"
+				android:paddingLeft="8dp" >
+
+				<Button
+					android:id="@+id/b_edit_address_pick_photo"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:text="@string/edit_address_book_entry_dialog_button_pick_photo"
+					android:textSize="@dimen/font_size_tiny" />
+
+				<Button
+					android:id="@+id/b_edit_address_clear_photo"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:text="@string/edit_address_book_entry_dialog_button_clear_photo"
+					android:textSize="@dimen/font_size_tiny" />
+			</LinearLayout>
+		</LinearLayout>
 	</LinearLayout>
 
 </ScrollView>
