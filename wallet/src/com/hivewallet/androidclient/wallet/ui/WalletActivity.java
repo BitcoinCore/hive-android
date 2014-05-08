@@ -282,9 +282,10 @@ public final class WalletActivity extends AbstractWalletActivity
 				startActivity(new Intent(this, AppPlatformActivity.class));
 				return true;
 
-			case R.id.wallet_options_address_book:
-				AddressBookActivity.start(this, true);
-				return true;
+			/* Disabled in favor of Hive contact management */
+			//case R.id.wallet_options_address_book:
+			//	AddressBookActivity.start(this, true);
+			//	return true;
 
 			case R.id.wallet_options_exchange_rates:
 				startActivity(new Intent(this, ExchangeRatesActivity.class));
