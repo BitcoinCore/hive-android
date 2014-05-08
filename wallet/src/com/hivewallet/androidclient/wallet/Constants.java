@@ -109,7 +109,7 @@ public final class Constants
 	public static final String CREDITS_ICON_URL = "http://thenounproject.com/";
 	public static final String AUTHOR_TWITTER_URL = "https://twitter.com/hivewallet";
 	public static final String AUTHOR_GOOGLEPLUS_URL = "https://plus.google.com/+JanVornberger";
-	public static final String COMMUNITY_GOOGLEPLUS_URL = "https://plus.google.com/communities/105515929887248493912";
+	public static final String COMMUNITY_GOOGLEPLUS_URL = "https://plus.google.com/communities/115942500002485175926";
 	public static final String MARKET_APP_URL = "market://details?id=%s";
 	public static final String WEBMARKET_APP_URL = "https://play.google.com/store/apps/details?id=%s";
 
