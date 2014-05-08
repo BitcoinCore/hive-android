@@ -13,6 +13,9 @@ import android.widget.FilterQueryProvider;
 
 public class PhoneContactsLookupToolkit
 {
+	// Note: This class currently supports pre-Honeycomb devices _almost_.
+	// Support will either be completed or removed at some point.
+	
 	@SuppressLint("InlinedApi")
     private final static String CONTACTS_DISPLAY_NAME = 
         Build.VERSION.SDK_INT
@@ -25,6 +28,7 @@ public class PhoneContactsLookupToolkit
 	        { Contacts._ID
 	        , Contacts.LOOKUP_KEY
 	        , CONTACTS_DISPLAY_NAME
+	        , Contacts.PHOTO_URI		/* specific to API >= 11 */
 	        };
 	private static int DISPLAY_NAME_COLUMN_INDEX = 2; 
 	
@@ -57,6 +61,18 @@ public class PhoneContactsLookupToolkit
 		});
 		
 		return simpleCursorAdapter;
+	}
+	
+	static public Uri getPhotoUriFromAdapter(SimpleCursorAdapter adapter, int position) {
+		Cursor cursor = (Cursor) adapter.getItem(position);
+		Uri photoUri = null;
+		
+		if (cursor != null && cursor.moveToPosition(position)) {
+			String photo = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.PHOTO_URI));
+			if (photo != null) photoUri = Uri.parse(photo);
+		}
+		
+		return photoUri;
 	}
 	
 	@SuppressLint("InlinedApi")

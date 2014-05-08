@@ -30,8 +30,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -134,10 +136,23 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 		viewAddress.setText(WalletUtils.formatHash(address, Constants.ADDRESS_FORMAT_GROUP_SIZE, Constants.ADDRESS_FORMAT_LINE_SIZE));
 
 		final AutoCompleteTextView viewLabel = (AutoCompleteTextView) view.findViewById(R.id.edit_address_book_entry_label);
+		final SimpleCursorAdapter adapter = PhoneContactsLookupToolkit.getContactsAdapter(activity,
+				android.R.layout.simple_list_item_1, android.R.id.text1); 
 		viewLabel.setText(label != null ? label : suggestedAddressLabel);
-		viewLabel.setAdapter(PhoneContactsLookupToolkit.getContactsAdapter(activity,
-				android.R.layout.simple_list_item_1, android.R.id.text1));
+		viewLabel.setAdapter(adapter);
 		viewLabel.setThreshold(1);
+		viewLabel.setOnItemClickListener(new AdapterView.OnItemClickListener()
+		{
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+			{
+				Uri itemUri = PhoneContactsLookupToolkit.getPhotoUriFromAdapter(adapter, position);
+				if (itemUri != null) {
+					photoUri = itemUri;
+					updateImageView();
+				}
+			}
+		});
 		
 		photo = (ImageView) view.findViewById(R.id.iv_edit_address_photo);
 		updateImageView();
