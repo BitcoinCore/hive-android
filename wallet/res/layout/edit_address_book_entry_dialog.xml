@@ -45,7 +45,7 @@
 			android:textSize="@dimen/font_size_small"
 			android:textStyle="bold" />
 
-		<EditText
+		<AutoCompleteTextView
 			android:id="@+id/edit_address_book_entry_label"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
@@ -59,7 +59,7 @@
 			android:textSize="@dimen/font_size_normal" >
 
 			<requestFocus />
-		</EditText>
+		</AutoCompleteTextView>
 
 		<TextView
 			android:layout_width="match_parent"

@@ -32,12 +32,14 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.AddressBookProvider.AddressBookEntry;
 import com.hivewallet.androidclient.wallet.Constants;
+import com.hivewallet.androidclient.wallet.util.PhoneContactsLookupToolkit;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
 import com.hivewallet.androidclient.wallet_test.R;
 import com.squareup.picasso.Picasso;
@@ -131,8 +133,11 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 		final TextView viewAddress = (TextView) view.findViewById(R.id.edit_address_book_entry_address);
 		viewAddress.setText(WalletUtils.formatHash(address, Constants.ADDRESS_FORMAT_GROUP_SIZE, Constants.ADDRESS_FORMAT_LINE_SIZE));
 
-		final TextView viewLabel = (TextView) view.findViewById(R.id.edit_address_book_entry_label);
+		final AutoCompleteTextView viewLabel = (AutoCompleteTextView) view.findViewById(R.id.edit_address_book_entry_label);
 		viewLabel.setText(label != null ? label : suggestedAddressLabel);
+		viewLabel.setAdapter(PhoneContactsLookupToolkit.getContactsAdapter(activity,
+				android.R.layout.simple_list_item_1, android.R.id.text1));
+		viewLabel.setThreshold(1);
 		
 		photo = (ImageView) view.findViewById(R.id.iv_edit_address_photo);
 		updateImageView();

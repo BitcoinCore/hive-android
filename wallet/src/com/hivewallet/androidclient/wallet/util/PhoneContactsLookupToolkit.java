@@ -104,6 +104,37 @@ public class PhoneContactsLookupToolkit implements LoaderCallbacks<Cursor>
 		simpleCursorAdapter.swapCursor(null);
 	}
 	
+	static public SimpleCursorAdapter getContactsAdapter(final Context context, int layout, int viewId) {
+		final String[] from_columns = { CONTACTS_DISPLAY_NAME };
+		final int[] to_ids = { viewId };
+		
+		SimpleCursorAdapter simpleCursorAdapter =
+				new SimpleCursorAdapter( context
+									   , layout
+									   , null
+									   , from_columns
+									   , to_ids
+									   , 0
+										);
+		simpleCursorAdapter.setStringConversionColumn(DISPLAY_NAME_COLUMN_INDEX);
+		simpleCursorAdapter.setFilterQueryProvider(new FilterQueryProvider()
+		{
+			@Override
+			public Cursor runQuery(CharSequence constraint)
+			{
+				return context.getContentResolver().query
+						( Contacts.CONTENT_URI
+						, PROJECTION
+						, CONTACTS_DISPLAY_NAME + " LIKE ?"
+						, new String[] { "%" + constraint.toString() + "%" }
+						, null
+						);
+			}
+		});
+		
+		return simpleCursorAdapter;
+	}
+	
 	@SuppressLint("InlinedApi")
 	static public Uri lookupPhoneContactPicture(ContentResolver contentResolver, String label) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
