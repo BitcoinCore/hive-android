@@ -48,8 +48,8 @@ public final class Constants
 		public static final String WALLET_KEY_BACKUP_PROTOBUF = "key-backup-protobuf" + FILENAME_NETWORK_SUFFIX;
 
 		public static final File EXTERNAL_WALLET_BACKUP_DIR = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-		public static final String EXTERNAL_WALLET_KEY_BACKUP = "bitcoin-wallet-keys" + FILENAME_NETWORK_SUFFIX;
-		public static final String EXTERNAL_WALLET_BACKUP = "bitcoin-wallet-backup" + FILENAME_NETWORK_SUFFIX;
+		public static final String EXTERNAL_WALLET_KEY_BACKUP = "hive-android-wallet-keys" + FILENAME_NETWORK_SUFFIX;
+		public static final String EXTERNAL_WALLET_BACKUP = "hive-android-wallet-backup" + FILENAME_NETWORK_SUFFIX;
 
 		public static final String BLOCKCHAIN_FILENAME = "blockchain" + FILENAME_NETWORK_SUFFIX;
 
