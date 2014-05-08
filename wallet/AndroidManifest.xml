@@ -183,11 +183,6 @@
 			android:screenOrientation="behind"
 			android:windowSoftInputMode="adjustResize" />
 		<activity
-			android:name="com.hivewallet.androidclient.wallet.ui.AddContactActivity"
-			android:configChanges="orientation"
-			android:screenOrientation="portrait"
-			android:label="@string/add_contact" />
-		<activity
 			android:name="com.hivewallet.androidclient.wallet.ui.AppPlatformActivity"
 			android:configChanges="orientation"
 			android:screenOrientation="portrait"
