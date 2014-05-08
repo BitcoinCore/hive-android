@@ -112,7 +112,6 @@ public final class Constants
 	public static final String COMMUNITY_GOOGLEPLUS_URL = "https://plus.google.com/communities/105515929887248493912";
 	public static final String MARKET_APP_URL = "market://details?id=%s";
 	public static final String WEBMARKET_APP_URL = "https://play.google.com/store/apps/details?id=%s";
-	public static final String MARKET_PUBLISHER_URL = "market://search?q=pub:\"Jan Vornberger\"";
 
 	public static final boolean ENABLE_VERSION_ALERT = false;
 	public static final String VERSION_URL = "http://wallet.schildbach.de/version";
