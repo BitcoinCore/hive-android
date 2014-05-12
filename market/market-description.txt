@@ -1,0 +1,28 @@
+Hive - The home for your digital money.
+
+Hive Android is a standalone Bitcoin wallet. No external server or cloud
+service needed - the keys to your bitcoins are stored on your device.
+
+Features:
+- Initiate transactions in various ways:
+  * Scan a QR code
+  * Click Bitcoin links
+  * Touch-to-pay via NFC
+- Support for payment protocol (BIP70) for increased security, reliability and
+  speed in making payments
+- Hive app store offers close integration with the rest of the Bitcoin
+  ecosystem. Apps available for LocalBitcoins.com, Bitstamp, piiko and
+  others.
+- Works offline: Stores transactions for later sending or transmits them via
+  Bluetooth
+- Amounts displayed in BTC, mBTC or µBTC with exchange rate info alongside
+- Add contacts based on your address book (information from your address book is
+  solely used for the autocomplete feature - no address book data ever leaves
+  your device)
+- Notifications for incoming payments
+- Encrypted backups
+
+Visit us at https://hivewallet.com/ !
+
+This software is licensed as GPLv3. Source code available at
+https://github.com/hivewallet/hive-android/ .
