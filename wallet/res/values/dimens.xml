@@ -19,7 +19,8 @@
 	<dimen name="divider_currency_padding">0dp</dimen>
 	<dimen name="wallet_address_qr_size">96dp</dimen>
 	<dimen name="wallet_address_qr_size_large">128dp</dimen>
-	<dimen name="wallet_balance_font_size">28sp</dimen>
+	<dimen name="wallet_balance_font_size">25sp</dimen>
+	<dimen name="wallet_balance_local_font_size">13sp</dimen>
 
 	<!-- Default screen margins, per the Android Design guidelines. -->
 	<dimen name="activity_horizontal_margin">16dp</dimen>

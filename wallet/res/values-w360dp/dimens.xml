@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-	<dimen name="wallet_balance_font_size">36sp</dimen>
+	<dimen name="wallet_balance_font_size">34sp</dimen>
+	<dimen name="wallet_balance_local_font_size">18sp</dimen>
 
 </resources>
