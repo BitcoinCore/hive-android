@@ -295,10 +295,6 @@ public final class WalletActivity extends AbstractWalletActivity
 				SweepWalletActivity.start(this);
 				return true;
 
-			case R.id.wallet_options_network_monitor:
-				startActivity(new Intent(this, NetworkMonitorActivity.class));
-				return true;
-
 			case R.id.wallet_options_import_keys:
 				showDialog(DIALOG_IMPORT_KEYS);
 				return true;
