@@ -1,10 +1,23 @@
-var registryBaseURL = 'https://hive-app-registry-android.herokuapp.com/'
+var registryBaseURL = 'https://hive-app-registry.herokuapp.com/'
+var logoClicks = 0
+var inDebugMode = false
+
+function selectRegistryAndListApps(){
+  bitcoin.getSystemInfo(function(info){
+    if (info.platform && info.platform === 'android'){
+      registryBaseURL = 'https://hive-app-registry-android.herokuapp.com/'
+    }
+    listApps()
+  })
+}
+
 function listApps(){
   var url = registryBaseURL + 'index.json'
   bitcoin.makeRequest(url, {
     success: function(apps) {
       hideSpinner()
       var container = document.querySelector(".list-group")
+      container.innerHTML = ''
       apps.sort(function(a, b){
         if(typeof a.name !== "string") return -1
         return a.name.localeCompare(b.name)
@@ -15,7 +28,8 @@ function listApps(){
     },
     error: function(){
       console.error("error", arguments)
-    }
+    },
+    complete: enableRegistryButton
   })
 }
 
@@ -67,7 +81,7 @@ function appElement(manifest){
 function populateButtonContainer(buttonContainer, manifest){
   bitcoin.getApplication(manifest.id, function(app){
     if(app) {
-      if(app.version === manifest.version){
+      if(app.version === manifest.version && !inDebugMode){
         setButtonToSuccessText(buttonContainer)
       } else {
         buttonContainer.appendChild(buttonElement('Update'))
@@ -100,7 +114,7 @@ function replaceButtonWithSpinner(buttonContainer, button){
 
 function installApp(manifest, buttonContainer, button){
   bitcoin.installApp(registryBaseURL + manifest.id + '.hiveapp', function(err, installed){
-    if (installed) {
+    if (installed && !inDebugMode) {
       setButtonToSuccessText(buttonContainer)
     } else if (err) {
       alert(err.message);
@@ -124,5 +138,28 @@ function hideSpinner(){
   document.querySelector('.spinner-container').style.setProperty("display", "none")
 }
 
-listApps()
+function showRegistryChooser(){
+  logoClicks += 1;
+  if (logoClicks >= 3){
+    inDebugMode = true
+    document.getElementById('registry-chooser').style.display = 'block'
+  }
+}
 
+function switchRegistry(){
+  disableRegistryButton()
+  registryBaseURL = document.getElementById('registry').value
+  listApps()
+}
+
+function disableRegistryButton(){
+  document.getElementById('refresh').value = 'Fetching...'
+  document.getElementById('refresh').setAttribute('disabled', 'disabled')
+}
+
+function enableRegistryButton(){
+  document.getElementById('refresh').value = 'Fetch'
+  document.getElementById('refresh').removeAttribute('disabled')
+}
+
+selectRegistryAndListApps()
