@@ -332,7 +332,8 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 		
 		private AppPlatformDBHelper appPlatformDBHelper;
 		private AppInstaller appInstaller;
-		
+
+		private String activeAppId;
 		private List<String> accessedHosts;
 		
 		public AppPlatformApi(Fragment fragment, WebView webView, String appId)
@@ -343,6 +344,7 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 			this.activity = fragment.getActivity();
 			this.webView = webView;
 			this.appPlatformDBHelper = application.getAppPlatformDBHelper();
+			this.activeAppId = appId;
 			this.accessedHosts = appPlatformDBHelper.getAccessedHosts(appId);
 		}
 		
@@ -537,8 +539,9 @@ public class AppRunnerFragment extends Fragment implements LoaderManager.LoaderC
 				return;
 			}
 			
+			/* check whitelist - app store gets a free pass to allow for arbitrary registry urls */
 			String host = uri.getHost().toLowerCase(Locale.US);
-			if (!accessedHosts.contains(host)) {
+			if (!accessedHosts.contains(host) && !Constants.APP_STORE_ID.equals(activeAppId)) {
 				performCallback(myCallbackId, "false", "''", "403", "'Host not listed in manifest file'");
 				return;
 			}

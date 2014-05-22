@@ -63,8 +63,8 @@ public class AppInstaller extends Thread {
 			return;
 		}
 		
-		if (!urlStr.toLowerCase(Locale.US).startsWith("https")) {
-			String errMsg = "Secure download location required";
+		if (!urlStr.toLowerCase(Locale.US).startsWith("http")) {
+			String errMsg = "Only http(s) links supported";
 			log.info("Aborting install: {}", errMsg);
 			callback.installFailed(errMsg);
 			return;
