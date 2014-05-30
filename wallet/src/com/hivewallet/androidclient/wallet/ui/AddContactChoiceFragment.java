@@ -14,6 +14,11 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.text.ClipboardManager;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.TextView;
 
 @SuppressWarnings("deprecation")
 public class AddContactChoiceFragment extends DialogFragment
@@ -37,11 +42,40 @@ public class AddContactChoiceFragment extends DialogFragment
 	{
 		DialogBuilder builder = new DialogBuilder(activity);
 		String[] choices = new String[] { activity.getString(R.string.add_contact_choice_qr)
-									    , activity.getString(R.string.add_contact_choice_clipboard)
+										, activity.getString(R.string.add_contact_choice_clipboard)
 										};
 		
-		builder.setTitle(R.string.add_contact) //_choice)
-			.setItems(choices, new DialogInterface.OnClickListener()
+		ListAdapter adapter = new ArrayAdapter<String>(
+				activity,
+				android.R.layout.select_dialog_item,
+				android.R.id.text1,
+				choices){
+					@Override
+					public View getView(int position, View convertView, ViewGroup parent)
+					{
+						View view = super.getView(position, convertView, parent);
+						TextView textView = (TextView)view.findViewById(android.R.id.text1);
+						
+						switch (position) {
+							case 0:
+								textView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_menu_camera_black, 0, 0, 0);
+								break;
+							case 1:
+								textView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_copy_black, 0, 0, 0);
+								break;
+							default:
+								throw new UnsupportedOperationException();
+						}
+						
+						int dp8 = (int) (8 * getResources().getDisplayMetrics().density + 0.5f);
+						textView.setCompoundDrawablePadding(dp8);
+						
+						return view;
+					}
+				};
+		
+		builder.setTitle(R.string.add_contact)
+			.setAdapter(adapter, new DialogInterface.OnClickListener()
 			{
 				@Override
 				public void onClick(DialogInterface dialog, int which)
