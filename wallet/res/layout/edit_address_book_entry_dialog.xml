@@ -94,6 +94,7 @@
 					android:id="@+id/b_edit_address_pick_photo"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
+					android:drawableLeft="@drawable/ic_menu_gallery_black"
 					android:text="@string/edit_address_book_entry_dialog_button_pick_photo"
 					android:textSize="@dimen/font_size_tiny" />
 
@@ -101,6 +102,7 @@
 					android:id="@+id/b_edit_address_clear_photo"
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
+					android:drawableLeft="@drawable/ic_menu_close_clear_cancel_black"
 					android:text="@string/edit_address_book_entry_dialog_button_clear_photo"
 					android:textSize="@dimen/font_size_tiny" />
 			</LinearLayout>
