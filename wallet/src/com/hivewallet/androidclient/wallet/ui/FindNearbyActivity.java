@@ -9,6 +9,7 @@ import java.util.Set;
 import com.hivewallet.androidclient.wallet.util.FindNearbyWorker;
 import com.hivewallet.androidclient.wallet.util.FindNearbyWorker.FindNearbyContact;
 import com.hivewallet.androidclient.wallet_test.R;
+import com.squareup.picasso.Picasso;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -65,11 +66,10 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 	private FindNearbyWorker findNearbyWorker = null;
 	
 	private SimpleCursorAdapter userSimpleCursorAdapter;
-	private ArrayAdapter<String> arrayAdapter;
+	private ArrayAdapter<FindNearbyContact> arrayAdapter;
 	
 	private ListView userListView;
 	private ListView nearbyListView;
-	private ImageButton visibilityImageButton = null;
 	private Button visibilityButton = null;
 	
 	private Random rnd = new Random();
@@ -83,12 +83,11 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 
 		final String[] from_columns = { Contacts.PHOTO_URI
 									  , Contacts.DISPLAY_NAME
-									  , Contacts.DISPLAY_NAME
 									  };
-		final int[] to_ids = { R.id.iv_user_photo, R.id.tv_user_name, R.id.ib_visibility };
+		final int[] to_ids = { R.id.iv_user_photo, R.id.tv_user_name };
 		userSimpleCursorAdapter= new SimpleCursorAdapter(
 				this
-				, R.layout.user_list_item
+				, R.layout.find_nearby_user_list_item
 				, null
 				, from_columns
 				, to_ids
@@ -102,8 +101,6 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 				switch (view.getId()) {
 					case R.id.iv_user_photo:
 						return setUserPhoto((ImageView)view, cursor, columnIndex);
-					case R.id.ib_visibility:
-						return setImageButton((ImageButton)view, cursor, columnIndex);
 					default:
 						return false;
 				}
@@ -112,28 +109,15 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 			private boolean setUserPhoto(ImageView imageView, Cursor cursor, int columnIndex)
 			{
 				String photo = cursor.getString(columnIndex);
-				Log.d(TAG, "in setUserPhoto:" + photo);
 				Uri uri = null;
 				if (photo != null)
-					uri = Uri.parse(photo);				
+					uri = Uri.parse(photo);
 				
-				// TODO: Picasso
-				imageView.setImageURI(uri);
+				Picasso.with(FindNearbyActivity.this)
+					.load(uri)
+					.placeholder(R.drawable.ic_contact_picture)
+					.into(imageView);
 				
-				return true;
-			}
-			
-			private boolean setImageButton(ImageButton imageButton, Cursor cursor, int columnIndex)
-			{
-				visibilityImageButton = imageButton;
-				imageButton.setOnClickListener(new View.OnClickListener()
-				{
-					@Override
-					public void onClick(View v)
-					{
-						prepareVisibility();
-					}
-				});
 				return true;
 			}
 		});
@@ -141,7 +125,7 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 		userListView = (ListView)findViewById(R.id.lv_user);
 		userListView.setAdapter(userSimpleCursorAdapter);
 		
-		arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line);
+		arrayAdapter = new FindNearbyAdapter(this, R.layout.find_nearby_contacts_list_item); 
 		
 		nearbyListView = (ListView)findViewById(R.id.lv_nearby);
 		TextView emptyNearbyTextView = (TextView)findViewById(R.id.tv_empty_nearby);
@@ -283,7 +267,7 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 		if (bluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE)
 			return;
 		
-		adjustVisibilityButtons();
+		adjustVisibilityButton();
 		if (shouldBeVisible)
 			findNearbyWorker.becomeVisible();
 	}
@@ -296,20 +280,18 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 		findNearbyWorker.becomeInvisible();
 	}
 	
-	private void adjustVisibilityButtons()
+	private void adjustVisibilityButton()
 	{
-		if (visibilityButton == null || visibilityImageButton == null || bluetoothAdapter == null)
+		if (visibilityButton == null || bluetoothAdapter == null)
 			return;
 		
 		boolean buttonState = visibilityButton.isEnabled();
 		boolean appState = bluetoothAdapter.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE
 				&& shouldBeVisible; 
 		
-		/* Buttons and adapter need to be in opposite states */
-		if (buttonState == appState) {
+		/* Button and adapter need to be in opposite states */
+		if (buttonState == appState)
 			visibilityButton.setEnabled(!appState);
-			visibilityImageButton.setEnabled(!appState);
-		}
 	}
 	
 	private void enterDiscoveryCooloff()
@@ -354,7 +336,7 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 				// take a pause from discovery
 				enterDiscoveryCooloff();
 			} else if (BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action)) {
-				adjustVisibilityButtons();
+				adjustVisibilityButton();
 			}
 		}
 	};
@@ -400,7 +382,7 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 			case FindNearbyWorker.MESSAGE_INFO_RECEIVED:
 				FindNearbyContact contact = (FindNearbyContact)msg.obj;
 				successfulCandidates.add(contact.getBluetoothAddress());
-				arrayAdapter.add(contact.getName());
+				arrayAdapter.add(contact);
 			case FindNearbyWorker.MESSAGE_HEARTBEAT:
 				manageDiscovery(); /* use heartbeat to check/update discovery operation */
 			default:

@@ -5,24 +5,26 @@
 	android:layout_height="match_parent"
 	android:orientation="vertical" >
 
-	<!-- TODO: see edit_address_book_entry_dialog.xml -->
 	<TextView
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
+		android:layout_marginLeft="@dimen/list_entry_padding_horizontal_lax"
+		android:layout_marginRight="@dimen/list_entry_padding_horizontal_lax"
 		android:layout_marginTop="8dp"
 		android:text="@string/you"
 		android:textSize="@dimen/font_size_small"
 		android:textStyle="bold" />
-	
+
 	<ListView
 		android:id="@+id/lv_user"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content" />
 
-	<!-- TODO: see edit_address_book_entry_dialog.xml -->
 	<TextView
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
+		android:layout_marginLeft="@dimen/list_entry_padding_horizontal_lax"
+		android:layout_marginRight="@dimen/list_entry_padding_horizontal_lax"
 		android:layout_marginTop="8dp"
 		android:text="@string/users_nearby"
 		android:textSize="@dimen/font_size_small"
@@ -38,9 +40,9 @@
 		android:id="@+id/tv_empty_nearby"
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
+		android:layout_marginTop="8dp"
 		android:layout_weight="1"
 		android:gravity="center_horizontal"
-		android:layout_marginTop="8dp"
 		android:text="@string/empty_nearby"
 		android:textSize="@dimen/font_size_normal"
 		android:visibility="gone" />
