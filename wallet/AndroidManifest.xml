@@ -20,7 +20,9 @@
 	<uses-permission android:name="android.permission.BROADCAST_STICKY" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 	<uses-permission android:name="android.permission.BLUETOOTH" />
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 	<uses-permission android:name="android.permission.READ_CONTACTS" />
+	<uses-permission android:name="android.permission.READ_PROFILE" />
 
 	<uses-feature
 		android:name="android.hardware.touchscreen"
@@ -191,7 +193,12 @@
 			android:name="com.hivewallet.androidclient.wallet.ui.AppRunnerActivity"
 			android:configChanges="orientation"
 			android:screenOrientation="portrait"
-			android:label="@string/app_platform" />		
+			android:label="@string/app_platform" />
+		<activity
+			android:name="com.hivewallet.androidclient.wallet.ui.FindNearbyActivity"
+			android:configChanges="orientation"
+			android:screenOrientation="portrait"
+			android:label="@string/find_nearby" />						
 
 		<provider
 			android:name="com.hivewallet.androidclient.wallet.AddressBookProvider"

@@ -296,6 +296,14 @@
 	<string name="wallet_address_dialog_copy_address">Bitcoin address copied to clipboard</string>
 	<string name="wallet_address_dialog_share_address">Share Bitcoin address via</string>
 	<string name="add_contact_choice">Add contact</string>
-	<string name="add_contact_choice_qr">via Bitcoin address from QR code</string>
-	<string name="add_contact_choice_clipboard">via Bitcoin address from clipboard</string>
+	<string name="add_contact_choice_qr">Scan Bitcoin address from QR code</string>
+	<string name="add_contact_choice_clipboard">Import Bitcoin address from clipboard</string>
+	<string name="add_contact_choice_findnearby">Find Hive users nearby</string>
+	<string name="bluetooth_unavailable">Bluetooth unavailable</string>
+	<string name="become_visible">Become visible</string>
+	<string name="you">You</string>
+	<string name="users_nearby">Other Hive users nearby</string>
+	<string name="empty_nearby">No users found so far</string>
+	<string name="find_nearby">Find Nearby</string>
+
 </resources>

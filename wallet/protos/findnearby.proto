@@ -1,0 +1,12 @@
+package findnearby;
+
+option java_package = "com.hivewallet.androidclient.wallet";
+option java_outer_classname = "Protos";
+
+message Contact {
+    required int32 version_major = 1;
+    optional int32 version_minor = 2 [default = 0];
+    required string bitcoin_address = 3;
+    optional string name = 4;
+    optional bytes photo = 5;
+}

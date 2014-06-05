@@ -1,0 +1,57 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	style="@style/ActivityPadding"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical" >
+
+	<!-- TODO: see edit_address_book_entry_dialog.xml -->
+	<TextView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="8dp"
+		android:text="@string/you"
+		android:textSize="@dimen/font_size_small"
+		android:textStyle="bold" />
+	
+	<ListView
+		android:id="@+id/lv_user"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content" />
+
+	<!-- TODO: see edit_address_book_entry_dialog.xml -->
+	<TextView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="8dp"
+		android:text="@string/users_nearby"
+		android:textSize="@dimen/font_size_small"
+		android:textStyle="bold" />
+
+	<ListView
+		android:id="@+id/lv_nearby"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1" />
+
+	<TextView
+		android:id="@+id/tv_empty_nearby"
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1"
+		android:gravity="center_horizontal"
+		android:layout_marginTop="8dp"
+		android:text="@string/empty_nearby"
+		android:textSize="@dimen/font_size_normal"
+		android:visibility="gone" />
+
+	<Button
+		android:id="@+id/b_visibility"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal"
+		android:drawableLeft="@drawable/ic_menu_view_black"
+		android:text="@string/become_visible"
+		android:textSize="@dimen/font_size_normal" />
+
+</LinearLayout>

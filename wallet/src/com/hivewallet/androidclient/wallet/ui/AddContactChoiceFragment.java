@@ -43,6 +43,7 @@ public class AddContactChoiceFragment extends DialogFragment
 		DialogBuilder builder = new DialogBuilder(activity);
 		String[] choices = new String[] { activity.getString(R.string.add_contact_choice_qr)
 										, activity.getString(R.string.add_contact_choice_clipboard)
+										, activity.getString(R.string.add_contact_choice_findnearby)
 										};
 		
 		ListAdapter adapter = new ArrayAdapter<String>(
@@ -62,6 +63,9 @@ public class AddContactChoiceFragment extends DialogFragment
 								break;
 							case 1:
 								textView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_copy_black, 0, 0, 0);
+								break;
+							case 2:
+								textView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.perm_group_location_black, 0, 0, 0);
 								break;
 							default:
 								throw new UnsupportedOperationException();
@@ -86,6 +90,9 @@ public class AddContactChoiceFragment extends DialogFragment
 							break;
 						case 1:
 							handlePasteClipboard();
+							break;
+						case 2:
+							handleFindNearby();
 							break;
 						default:
 							throw new UnsupportedOperationException();
@@ -136,6 +143,11 @@ public class AddContactChoiceFragment extends DialogFragment
 			activity.toast(R.string.address_book_options_paste_from_clipboard_empty);
 		}
 	}
+	
+	private void handleFindNearby()
+	{
+		activity.startActivity(new Intent(activity, FindNearbyActivity.class));
+	}		
 	
 	public static void show(FragmentManager manager) {
 		AddContactChoiceFragment fragment = instance();
