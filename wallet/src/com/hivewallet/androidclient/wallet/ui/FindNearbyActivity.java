@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import com.google.bitcoin.core.Address;
+import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.FindNearbyWorker;
 import com.hivewallet.androidclient.wallet.util.FindNearbyWorker.FindNearbyContact;
 import com.hivewallet.androidclient.wallet_test.R;
@@ -73,6 +75,8 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 	private Button visibilityButton = null;
 	
 	private Random rnd = new Random();
+	
+	private WalletApplication application;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -148,6 +152,8 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 		
 		contentResolver = getContentResolver();
 		
+		application = (WalletApplication)getApplication();
+		
 		bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null) {
 			Toast.makeText(this, R.string.bluetooth_unavailable, Toast.LENGTH_LONG).show();
@@ -199,7 +205,8 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
         
         // setup worker
         if (findNearbyWorker == null) {
-        	findNearbyWorker = new FindNearbyWorker(bluetoothAdapter, contentResolver, handler, "1AxQN2njHDnYbHBj9PPiW4b1eJhMBuq7Gm");
+        	Address address = application.determineSelectedAddress();
+        	findNearbyWorker = new FindNearbyWorker(bluetoothAdapter, contentResolver, handler, address.toString());
 			findNearbyWorker.start();
         }
         
