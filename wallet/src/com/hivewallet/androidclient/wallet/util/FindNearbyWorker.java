@@ -475,6 +475,11 @@ public class FindNearbyWorker extends Thread
 			return bluetoothAddress;
 		}
 		
+		public String getBitcoinAddress()
+		{
+			return bitcoinAddress;
+		}
+		
 		private Contact toProtos() {
 			Builder builder = Contact.newBuilder()
 					.setVersionMajor(1)
