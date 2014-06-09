@@ -1,5 +1,7 @@
 package com.hivewallet.androidclient.wallet.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -8,9 +10,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
 import com.google.protobuf.ByteString;
 import com.hivewallet.androidclient.wallet.Protos.Contact;
 import com.hivewallet.androidclient.wallet.Protos.Contact.Builder;
+import com.hivewallet.androidclient.wallet.util.GenericUtils.BitmapSize;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -18,9 +23,13 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.provider.ContactsContract.Contacts;
 import android.util.Log;
 
@@ -40,6 +49,8 @@ public class FindNearbyWorker extends Thread
 	private static final int MAXIMUM_BACKOFF = 16; /* seconds */
 	
 	private static final int BLUETOOTH_TIMEOUT = 10; /* seconds */ 
+	
+	private static final int REASONABLE_BITMAP_SIZE = 200; /* pixels */
 	
 	private static final int COMMAND_BECOME_VISIBLE = 0;
 	private static final int COMMAND_BECOME_INVISIBLE = 1;
@@ -203,11 +214,44 @@ public class FindNearbyWorker extends Thread
 		
 		if (cursor.moveToNext()) {
 			String name = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.DISPLAY_NAME));
-			record = new FindNearbyContact(bitcoinAddress, name);
+			String photoUriStr = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.PHOTO_URI));
+			
+			Uri photoUri = null;
+			if (photoUriStr != null)
+				photoUri = Uri.parse(photoUriStr);
+
+			byte[] photo = null;
+			if (photoUri != null) {
+				try
+				{
+					Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, photoUri);
+					Bitmap scaledBitmap = ensureReasonableSize(bitmap, REASONABLE_BITMAP_SIZE);
+					if (scaledBitmap == null)
+						throw new IOException();
+					
+					ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+					scaledBitmap.compress(CompressFormat.PNG, 100, outStream);
+					photo = outStream.toByteArray();
+				}
+				catch (FileNotFoundException ignored) {}
+				catch (IOException ignored) {}
+			}
+			
+			record = new FindNearbyContact(bitcoinAddress, name, photo);
 		}
 		
 		cursor.close();
 		return record;
+	}
+	
+	private Bitmap ensureReasonableSize(@Nullable Bitmap bitmap, int longestSide) {
+		if (bitmap == null)
+			return null;
+		
+		BitmapSize newSize = GenericUtils.calculateReasonableSize(
+				bitmap.getWidth(), bitmap.getHeight(), longestSide);
+		
+		return Bitmap.createScaledBitmap(bitmap, newSize.getWidth(), newSize.getHeight(), false);
 	}
 	
 	public void shutdown() {
@@ -441,7 +485,7 @@ public class FindNearbyWorker extends Thread
 			this(null, bitcoinAddress, name, null);
 		}
 		
-		public FindNearbyContact(String bitcoinAddress, String name, byte[] photo)
+		public FindNearbyContact(String bitcoinAddress, String name, @Nullable byte[] photo)
 		{
 			this(null, bitcoinAddress, name, photo);
 		}
