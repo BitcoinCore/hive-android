@@ -19,7 +19,9 @@ package com.hivewallet.androidclient.wallet.util;
 
 import static net.java.quickcheck.generator.PrimitiveGenerators.fixedValues;
 import static net.java.quickcheck.generator.PrimitiveGenerators.longs;
+import static net.java.quickcheck.generator.PrimitiveGeneratorSamples.anyInteger;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 
@@ -28,6 +30,7 @@ import net.java.quickcheck.generator.iterable.Iterables;
 import org.junit.Test;
 
 import com.google.bitcoin.core.NetworkParameters;
+import com.hivewallet.androidclient.wallet.util.GenericUtils.BitmapSize;
 
 /**
  * @author Andreas Schildbach
@@ -128,5 +131,30 @@ public class GenericUtilsTest
 			assertEquals("Shift: " + shift + "; precision: " + precision
 					+ "; intermediate state was: " + valueStr, value, valueParsed);
 		}
+	}
+
+	@Test
+	public void scaledBitmapShouldMaintainRatio()
+	{
+		int minSize = 50;
+		int maxSize = 1000;
+		
+		int widthBefore = anyInteger(minSize, maxSize);
+		int heightBefore = anyInteger(minSize, maxSize);
+		int longestSide = anyInteger(minSize, maxSize);
+		double ratioBefore = (double)widthBefore / (double)heightBefore;
+		
+		BitmapSize size = GenericUtils.calculateReasonableSize(widthBefore, heightBefore, longestSide);
+		int widthAfter = size.getWidth();
+		int heightAfter = size.getHeight();
+		double ratioAfter = (double)widthAfter / (double)heightAfter;
+		double maxRatioDelta = ratioBefore * 0.2;
+		
+		assertTrue("Bitmap should have a reasonable size, but: " +
+				widthAfter + "x" + heightAfter + " > " + longestSide + "x" + longestSide,
+				widthAfter <= longestSide && heightAfter <= longestSide);
+		assertEquals("Ratios differ too much. Size before: " + widthBefore + "x" + heightBefore +
+				"; size after:" + widthAfter + "x" + heightAfter,
+				ratioBefore, ratioAfter, maxRatioDelta);
 	}
 }

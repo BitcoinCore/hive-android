@@ -211,4 +211,48 @@ public class GenericUtils
 			return sb.toString();
 		}
 	}
+	
+	/** Find new width and height that maintain ratio, but limit the longest side. **/
+	public static BitmapSize calculateReasonableSize(int width, int height, int longestSide)
+	{
+		int newWidth = width;
+		int newHeight = height;
+		
+		if (width >= height && width > longestSide) {
+			newWidth = longestSide;
+			newHeight = (int)Math.round((double)height * (double)newWidth / (double)width);
+		} else if (height > width && height > longestSide) {
+			newHeight = longestSide;
+			newWidth = (int)Math.round((double)width * (double)newHeight / (double)height);
+		}
+
+		if (newWidth <= 0)
+			newWidth = 1;
+		if (newHeight <= 0)
+			newHeight = 1;
+		
+		return new BitmapSize(newWidth, newHeight);
+	}
+	
+	public static class BitmapSize
+	{
+		private final int width;
+		private final int height;
+		
+		public BitmapSize(int width, int height)
+		{
+			this.width = width;
+			this.height = height;
+		}
+		
+		public int getWidth()
+		{
+			return width;
+		}
+		
+		public int getHeight()
+		{
+			return height;
+		}
+	}
 }
