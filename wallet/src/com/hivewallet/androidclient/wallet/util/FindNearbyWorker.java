@@ -10,18 +10,14 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
-
-import com.google.protobuf.ByteString;
-import com.hivewallet.androidclient.wallet.Protos.Contact;
-import com.hivewallet.androidclient.wallet.Protos.Contact.Builder;
-import com.hivewallet.androidclient.wallet.util.GenericUtils.BitmapSize;
+import com.hivewallet.androidclient.wallet.AddressBookProvider;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -50,8 +46,6 @@ public class FindNearbyWorker extends Thread
 	
 	private static final int BLUETOOTH_TIMEOUT = 10; /* seconds */ 
 	
-	private static final int REASONABLE_BITMAP_SIZE = 200; /* pixels */
-	
 	private static final int COMMAND_BECOME_VISIBLE = 0;
 	private static final int COMMAND_BECOME_INVISIBLE = 1;
 	private static final int COMMAND_ADD_CANDIDATE = 2;
@@ -65,6 +59,7 @@ public class FindNearbyWorker extends Thread
 	
 	private final BlockingQueue<String> candidates = new LinkedBlockingQueue<String>();
 	
+	private final Context context;
 	private final BluetoothAdapter bluetoothAdapter;
 	private final ContentResolver contentResolver;
 	private final Handler handler;
@@ -76,8 +71,9 @@ public class FindNearbyWorker extends Thread
 	private FindNearbyContact userRecord = null;
 	private String bitcoinAddress;
 	
-	public FindNearbyWorker(BluetoothAdapter bluetoothAdapter, ContentResolver contentResolver, Handler handler, String bitcoinAddress)
+	public FindNearbyWorker(Context context, BluetoothAdapter bluetoothAdapter, ContentResolver contentResolver, Handler handler, String bitcoinAddress)
 	{
+		this.context = context;
 		this.bluetoothAdapter = bluetoothAdapter;
 		this.contentResolver = contentResolver;
 		this.handler = handler;
@@ -195,6 +191,9 @@ public class FindNearbyWorker extends Thread
 	
 	private void reportReceivedContact(FindNearbyContact contact)
 	{
+		/* prepare contact photo uri, if present, before passing it on to the UI */
+		contact.preparePhotoUri(context);
+		
 		Message msg = handler.obtainMessage(MESSAGE_INFO_RECEIVED);
 		msg.obj = contact;
 		handler.sendMessage(msg);
@@ -225,7 +224,7 @@ public class FindNearbyWorker extends Thread
 				try
 				{
 					Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, photoUri);
-					Bitmap scaledBitmap = ensureReasonableSize(bitmap, REASONABLE_BITMAP_SIZE);
+					Bitmap scaledBitmap = AddressBookProvider.ensureReasonableSize(bitmap);
 					if (scaledBitmap == null)
 						throw new IOException();
 					
@@ -242,16 +241,6 @@ public class FindNearbyWorker extends Thread
 		
 		cursor.close();
 		return record;
-	}
-	
-	private Bitmap ensureReasonableSize(@Nullable Bitmap bitmap, int longestSide) {
-		if (bitmap == null)
-			return null;
-		
-		BitmapSize newSize = GenericUtils.calculateReasonableSize(
-				bitmap.getWidth(), bitmap.getHeight(), longestSide);
-		
-		return Bitmap.createScaledBitmap(bitmap, newSize.getWidth(), newSize.getHeight(), false);
 	}
 	
 	public void shutdown() {
@@ -471,86 +460,6 @@ public class FindNearbyWorker extends Thread
 				Message msg = handler.obtainMessage(MESSAGE_HEARTBEAT);
 				handler.sendMessage(msg);
 			}
-		}
-	}
-	
-	public static class FindNearbyContact {
-		private String bluetoothAddress = null;
-		private String bitcoinAddress = null;
-		private String name = null;
-		private byte[] photo = null;
-		
-		public FindNearbyContact(String bitcoinAddress, String name)
-		{
-			this(null, bitcoinAddress, name, null);
-		}
-		
-		public FindNearbyContact(String bitcoinAddress, String name, @Nullable byte[] photo)
-		{
-			this(null, bitcoinAddress, name, photo);
-		}
-		
-		public FindNearbyContact(String bluetoothAddress, String bitcoinAddress, String name, byte[] photo)
-		{
-			this.bluetoothAddress = bluetoothAddress;
-			this.bitcoinAddress = bitcoinAddress;
-			this.name = name;
-			this.photo = photo;
-		}
-		
-		public void writeDelimitedTo(OutputStream output) throws IOException
-		{
-			Contact contact = toProtos();
-			contact.writeDelimitedTo(output);
-		}
-		
-		public String toString()
-		{
-			return toProtos().toString();
-		}
-		
-		public String getName()
-		{
-			return name;
-		}
-		
-		public String getBluetoothAddress()
-		{
-			return bluetoothAddress;
-		}
-		
-		public String getBitcoinAddress()
-		{
-			return bitcoinAddress;
-		}
-		
-		private Contact toProtos() {
-			Builder builder = Contact.newBuilder()
-					.setVersionMajor(1)
-					.setBitcoinAddress(bitcoinAddress)
-					.setName(name);
-			
-			if (photo != null)
-				builder.setPhoto(ByteString.copyFrom(photo));
-			
-			return builder.build();
-		}
-		
-		public static FindNearbyContact parseDelimitedFrom(String bluetoothAddress, InputStream input) throws IOException
-		{
-			Contact contact = Contact.parseDelimitedFrom(input);
-			
-			String bitcoinAddress = contact.getBitcoinAddress();
-			String name = "";
-			byte[] photo = null;
-			
-			if (contact.hasName())
-				name = contact.getName();
-			
-			if (contact.hasPhoto())
-				photo = contact.getPhoto().toByteArray();
-			
-			return new FindNearbyContact(bluetoothAddress, bitcoinAddress, name, photo);
 		}
 	}
 }

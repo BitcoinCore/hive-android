@@ -158,10 +158,18 @@
 			<version>1.0.3</version>
 		</dependency>
 
+		<!-- org.apache.commons.io.* -->
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.4</version>
+		</dependency>
+
+		<!-- org.apache.commons.codec.* -->
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.9</version>
 		</dependency>
 
 		<!-- org.junit.* -->

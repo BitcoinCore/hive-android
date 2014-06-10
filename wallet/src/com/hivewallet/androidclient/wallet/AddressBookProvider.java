@@ -23,7 +23,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.hivewallet.androidclient.wallet.util.GenericUtils;
 import com.hivewallet.androidclient.wallet.util.PhoneContactsLookupToolkit;
+import com.hivewallet.androidclient.wallet.util.GenericUtils.BitmapSize;
 
 import android.content.ContentProvider;
 import android.content.ContentResolver;
@@ -33,7 +35,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Bundle;
 
 /**
  * @author Andreas Schildbach
@@ -50,6 +54,13 @@ public class AddressBookProvider extends ContentProvider
 	public static final String SELECTION_QUERY = "q";
 	public static final String SELECTION_IN = "in";
 	public static final String SELECTION_NOTIN = "notin";
+	
+	private static final String METHOD_INSERT_OR_UPDATE_PHOTO_URI = "insert_or_update_photo_uri";
+	private static final String METHOD_DELETE_STALE_PHOTO_URIS = "delete_stale_photo_uris";
+	private static final String PHOTO_URI_PRESENT = "photo_uri_present";
+	private static final String STALE_PHOTO_URIS = "stale_photo_uris";
+	
+	private static final int REASONABLE_BITMAP_SIZE = 200; /* pixels */
 
 	public static Uri contentUri(@Nonnull final String packageName)
 	{
@@ -85,7 +96,49 @@ public class AddressBookProvider extends ContentProvider
 		} else {
 			return null;
 		}
-	}	
+	}
+	
+	/** Records a photo uri in the photo assets table. Returns {@code true} if the uri was already present. */
+	public static boolean insertOrUpdatePhotoUri(final Context context, @Nullable final Uri photoUri)
+	{
+		if (photoUri == null)
+			return false;
+		
+		final Uri uri = contentUri(context.getPackageName());
+		Bundle bundle = context.getContentResolver().call(
+				uri, METHOD_INSERT_OR_UPDATE_PHOTO_URI, photoUri.toString(), null);
+		return bundle.getBoolean(PHOTO_URI_PRESENT);
+	}
+	
+	/** Finds non-permanent photo assets that have not been used in a while.
+	 * Deletes them from the database and returns their uris.
+	 */
+	public static List<Uri> deleteStalePhotoAssets(final Context context)
+	{
+		final Uri uri = contentUri(context.getPackageName());
+		Bundle bundle = context.getContentResolver().call(
+				uri, METHOD_DELETE_STALE_PHOTO_URIS, null, null);
+		
+		List<Uri> photoUris = new ArrayList<Uri>();
+		for (String photoUriStr : bundle.getStringArrayList(STALE_PHOTO_URIS)) {
+			Uri photoUri = Uri.parse(photoUriStr);
+			if (photoUri == null)
+				throw new RuntimeException("Invalid URI in photo assets database table");
+			photoUris.add(photoUri);
+		}
+		
+		return photoUris;
+	}
+	
+	public static Bitmap ensureReasonableSize(@Nullable Bitmap bitmap) {
+		if (bitmap == null)
+			return null;
+		
+		BitmapSize newSize = GenericUtils.calculateReasonableSize(
+				bitmap.getWidth(), bitmap.getHeight(), REASONABLE_BITMAP_SIZE);
+		
+		return Bitmap.createScaledBitmap(bitmap, newSize.getWidth(), newSize.getHeight(), false);
+	}
 
 	private Helper helper;
 
@@ -203,6 +256,29 @@ public class AddressBookProvider extends ContentProvider
 
 		return cursor;
 	}
+	
+	@Override
+	public Bundle call(String method, String arg, Bundle extras)
+	{
+		if (method.equals(METHOD_INSERT_OR_UPDATE_PHOTO_URI)) {
+			if (arg == null)
+				return null;
+			
+			boolean alreadyPresent = helper.insertOrUpdatePhotoAsset(arg); 
+			Bundle bundle = new Bundle();
+			bundle.putBoolean(PHOTO_URI_PRESENT, alreadyPresent);
+			
+			return bundle;
+		} else if (method.equals(METHOD_DELETE_STALE_PHOTO_URIS)) {
+			ArrayList<String> stalePhotoUris = helper.deleteStalePhotoAssets();
+			Bundle bundle = new Bundle();
+			bundle.putStringArrayList(STALE_PHOTO_URIS, stalePhotoUris);
+			
+			return bundle;
+		} else {
+			throw new UnsupportedOperationException("Unknown method: " + method);
+		}
+	}
 
 	private static void appendAddresses(@Nonnull final SQLiteQueryBuilder qb, @Nonnull final String[] addresses)
 	{
@@ -248,8 +324,12 @@ public class AddressBookProvider extends ContentProvider
 	private static class Helper extends SQLiteOpenHelper
 	{
 		private static final String DATABASE_NAME = "address_book";
-		private static final int DATABASE_VERSION = 3;
+		private static final String PHOTO_ASSETS_TABLE_NAME = "photos";
+		private static final int DATABASE_VERSION = 4;
 
+		private static final String KEY_PERMANENT = "permanent";
+		private static final String KEY_TIMESTAMP = "timestamp";		
+		
 		private static final String DATABASE_CREATE = "CREATE TABLE " + DATABASE_TABLE + " (" //
 				+ KEY_ROWID + " INTEGER PRIMARY KEY AUTOINCREMENT, " //
 				+ KEY_ADDRESS + " TEXT NOT NULL, " //
@@ -258,8 +338,21 @@ public class AddressBookProvider extends ContentProvider
 		private static final String INDEX_CREATE = "CREATE INDEX " + DATABASE_TABLE + "_idx1 on " //
 				+ DATABASE_TABLE + " (" + KEY_ADDRESS + ");";
 		
+		private static final String DATABASE_CREATE2 =
+				"CREATE TABLE " + PHOTO_ASSETS_TABLE_NAME + " ("
+				+ KEY_ROWID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+				+ KEY_PHOTO + " TEXT NOT NULL,"
+				+ KEY_PERMANENT + " INTEGER NOT NULL,"
+				+ KEY_TIMESTAMP + " INTEGER NOT NULL);";
+		private static final String INDEX_CREATE2 =
+				"CREATE INDEX " + PHOTO_ASSETS_TABLE_NAME + "_idx1 on " + PHOTO_ASSETS_TABLE_NAME + " (" + KEY_PHOTO + ");";
+		private static final String INDEX_CREATE3 =
+				"CREATE INDEX " + PHOTO_ASSETS_TABLE_NAME + "_idx2 on " + PHOTO_ASSETS_TABLE_NAME + " (" + KEY_TIMESTAMP + ");";		
+		
 		private static final String UPGRADE1 = "ALTER TABLE " + DATABASE_TABLE + " " //
 				+ " ADD " + KEY_PHOTO + " TEXT NULL;";
+		
+		private static final long ABOUT_A_DAY = 24 * 60 * 60 * 1000; /* in milliseconds */
 		
 		private ContentResolver contentResolver;
 
@@ -273,7 +366,10 @@ public class AddressBookProvider extends ContentProvider
 		public void onCreate(final SQLiteDatabase db)
 		{
 			db.execSQL(DATABASE_CREATE);
+			db.execSQL(DATABASE_CREATE2);
 			db.execSQL(INDEX_CREATE);
+			db.execSQL(INDEX_CREATE2);
+			db.execSQL(INDEX_CREATE3);
 		}
 
 		@Override
@@ -319,10 +415,62 @@ public class AddressBookProvider extends ContentProvider
 					}
 				}
 			}
+			else if (oldVersion == 3)
+			{
+				db.execSQL(DATABASE_CREATE2);
+				db.execSQL(INDEX_CREATE2);
+				db.execSQL(INDEX_CREATE3);
+			}
 			else
 			{
 				throw new UnsupportedOperationException("old=" + oldVersion);
 			}
 		}
+		
+		public boolean insertOrUpdatePhotoAsset(String photo)
+		{
+			SQLiteDatabase db = getWritableDatabase();
+			Cursor cursor = db.query(
+					PHOTO_ASSETS_TABLE_NAME, new String[] { KEY_PHOTO }, KEY_PHOTO + " = ?", new String [] { photo }, null, null, null);
+			boolean hasHash = cursor.moveToFirst();
+			cursor.close();
+
+			ContentValues values = new ContentValues();
+			values.put(KEY_PHOTO, photo);
+			values.put(KEY_TIMESTAMP, System.currentTimeMillis());
+			if (!hasHash) {
+				values.put(KEY_PERMANENT, 0);
+				db.insert(PHOTO_ASSETS_TABLE_NAME, null, values);
+				return false;
+			} else {
+				db.update(PHOTO_ASSETS_TABLE_NAME, values, KEY_PHOTO + " = ?", new String [] { photo });
+				return true;
+			}
+		}
+		
+		public ArrayList<String> deleteStalePhotoAssets()
+		{
+			long cutoffTimestamp = System.currentTimeMillis() - ABOUT_A_DAY;
+			SQLiteDatabase db = getReadableDatabase();
+			Cursor cursor = db.query(
+					PHOTO_ASSETS_TABLE_NAME, new String[] { KEY_PHOTO },
+					KEY_PERMANENT + " = 0 AND " + KEY_TIMESTAMP + " < ?",
+					new String [] { String.valueOf(cutoffTimestamp) }, null, null, null);
+			
+			ArrayList<String> staleEntries = new ArrayList<String>();
+			while (cursor.moveToNext()) {
+				staleEntries.add(cursor.getString(cursor.getColumnIndexOrThrow(KEY_PHOTO)));
+			}
+			cursor.close();
+			
+			if (staleEntries.isEmpty())
+				return staleEntries;
+			
+			db = getWritableDatabase();
+			for (String photo : staleEntries) {
+				db.delete(PHOTO_ASSETS_TABLE_NAME, KEY_PHOTO + " = ?", new String[] { photo });
+			}
+			return staleEntries;
+		}		
 	}
 }

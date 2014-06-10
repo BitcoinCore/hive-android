@@ -138,4 +138,6 @@ public final class Constants
 
 	public static final String APP_PLATFORM_FOLDER = "app_platform";
 	public static final String APP_PLATFORM_APP_FOLDER = "apps";
+	
+	public static final String PHOTO_ASSETS_FOLDER = "photo_assets";
 }

@@ -3,14 +3,12 @@ package com.hivewallet.androidclient.wallet.ui;
 import com.google.bitcoin.core.AddressFormatException;
 import com.hivewallet.androidclient.wallet.data.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.send.SendCoinsActivity;
-import com.hivewallet.androidclient.wallet.util.FindNearbyWorker.FindNearbyContact;
+import com.hivewallet.androidclient.wallet.util.FindNearbyContact;
 import com.hivewallet.androidclient.wallet_test.R;
 import com.squareup.picasso.Picasso;
 
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +43,7 @@ public class FindNearbyAdapter extends ArrayAdapter<FindNearbyContact>
 		ImageButton sendMoneyImageButton = (ImageButton)rowView.findViewById(R.id.ib_contact_send_money);
 		
 		Picasso.with(context)
-			.load((Uri)null)
+			.load(contact.getPhotoUri())
 			.placeholder(R.drawable.ic_contact_picture)
 			.into(photoImageView);
 		

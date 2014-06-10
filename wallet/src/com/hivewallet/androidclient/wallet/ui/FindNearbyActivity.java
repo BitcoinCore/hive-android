@@ -8,8 +8,8 @@ import java.util.Set;
 
 import com.google.bitcoin.core.Address;
 import com.hivewallet.androidclient.wallet.WalletApplication;
+import com.hivewallet.androidclient.wallet.util.FindNearbyContact;
 import com.hivewallet.androidclient.wallet.util.FindNearbyWorker;
-import com.hivewallet.androidclient.wallet.util.FindNearbyWorker.FindNearbyContact;
 import com.hivewallet.androidclient.wallet_test.R;
 import com.squareup.picasso.Picasso;
 
@@ -38,7 +38,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -206,7 +205,7 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
         // setup worker
         if (findNearbyWorker == null) {
         	Address address = application.determineSelectedAddress();
-        	findNearbyWorker = new FindNearbyWorker(bluetoothAdapter, contentResolver, handler, address.toString());
+        	findNearbyWorker = new FindNearbyWorker(application, bluetoothAdapter, contentResolver, handler, address.toString());
 			findNearbyWorker.start();
         }
         
