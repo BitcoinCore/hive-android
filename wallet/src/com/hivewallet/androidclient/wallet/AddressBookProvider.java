@@ -168,6 +168,10 @@ public class AddressBookProvider extends ContentProvider
 
 		final Uri rowUri = contentUri(getContext().getPackageName()).buildUpon().appendPath(address).appendPath(Long.toString(rowId)).build();
 
+		String photo = values.getAsString(KEY_PHOTO);
+		if (photo != null)
+			helper.setPhotoAssetAsPermanent(photo, true);
+		
 		getContext().getContentResolver().notifyChange(rowUri, null);
 
 		return rowUri;
@@ -446,6 +450,17 @@ public class AddressBookProvider extends ContentProvider
 				db.update(PHOTO_ASSETS_TABLE_NAME, values, KEY_PHOTO + " = ?", new String [] { photo });
 				return true;
 			}
+		}
+		
+		/** If the provided photo uri is part of the photo assets database, the {@code permanent} field will be set. **/
+		public void setPhotoAssetAsPermanent(String photo, boolean isPermanent)
+		{
+			SQLiteDatabase db = getWritableDatabase();
+			
+			ContentValues values = new ContentValues();
+			values.put(KEY_PHOTO, photo);
+			values.put(KEY_PERMANENT, isPermanent ? 1 : 0);
+			db.update(PHOTO_ASSETS_TABLE_NAME, values, KEY_PHOTO + " = ?", new String [] { photo });
 		}
 		
 		public ArrayList<String> deleteStalePhotoAssets()
