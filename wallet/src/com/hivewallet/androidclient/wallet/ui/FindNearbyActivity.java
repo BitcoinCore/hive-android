@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.Set;
 
 import com.google.bitcoin.core.Address;
+import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.FindNearbyContact;
 import com.hivewallet.androidclient.wallet.util.FindNearbyWorker;
@@ -21,6 +22,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -36,7 +38,6 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -67,7 +68,7 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 	private FindNearbyWorker findNearbyWorker = null;
 	
 	private SimpleCursorAdapter userSimpleCursorAdapter;
-	private ArrayAdapter<FindNearbyContact> arrayAdapter;
+	private FindNearbyAdapter arrayAdapter;
 	
 	private ListView userListView;
 	private ListView nearbyListView;
@@ -128,7 +129,8 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 		userListView = (ListView)findViewById(R.id.lv_user);
 		userListView.setAdapter(userSimpleCursorAdapter);
 		
-		arrayAdapter = new FindNearbyAdapter(this, R.layout.find_nearby_contacts_list_item); 
+		arrayAdapter = new FindNearbyAdapter(
+				this, getSupportFragmentManager(), R.layout.find_nearby_contacts_list_item); 
 		
 		nearbyListView = (ListView)findViewById(R.id.lv_nearby);
 		TextView emptyNearbyTextView = (TextView)findViewById(R.id.tv_empty_nearby);
@@ -202,6 +204,9 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 		filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
         this.registerReceiver(receiver, filter);
         
+        // watch address book
+        contentResolver.registerContentObserver(AddressBookProvider.contentUri(getPackageName()), true, addressBookObserver);
+        
         // setup worker
         if (findNearbyWorker == null) {
         	Address address = application.determineSelectedAddress();
@@ -221,6 +226,8 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 		
 		// unregister from broadcasts
 		this.unregisterReceiver(receiver);
+		
+		contentResolver.unregisterContentObserver(addressBookObserver);
 		
 		if (findNearbyWorker != null) {
 			findNearbyWorker.shutdown();
@@ -395,4 +402,20 @@ public class FindNearbyActivity extends FragmentActivity implements LoaderCallba
 				return false;
 		}
 	}
+	
+	private final ContentObserver addressBookObserver = new ContentObserver(handler)
+	{
+		@Override
+		public void onChange(final boolean selfChange)
+		{
+			runOnUiThread(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					arrayAdapter.clearAddressBookCache();
+				}
+			});
+		}
+	};	
 }

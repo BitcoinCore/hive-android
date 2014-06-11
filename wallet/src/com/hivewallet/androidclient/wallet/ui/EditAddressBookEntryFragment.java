@@ -56,6 +56,7 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 
 	private static final String KEY_ADDRESS = "address";
 	private static final String KEY_SUGGESTED_ADDRESS_LABEL = "suggested_address_label";
+	private static final String KEY_SUGGESTED_PHOTO_URI = "suggested_photo_uri";
 
 	public static void edit(final FragmentManager fm, @Nonnull final String address)
 	{
@@ -64,17 +65,24 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 
 	public static void edit(final FragmentManager fm, @Nonnull final String address, @Nullable final String suggestedAddressLabel)
 	{
-		final DialogFragment newFragment = EditAddressBookEntryFragment.instance(address, suggestedAddressLabel);
+		edit(fm, address, suggestedAddressLabel, null);
+	}
+	
+	public static void edit(final FragmentManager fm, @Nonnull final String address, @Nullable final String suggestedAddressLabel, @Nullable final Uri suggestedPhotoUri)
+	{
+		final DialogFragment newFragment = EditAddressBookEntryFragment.instance(address, suggestedAddressLabel, suggestedPhotoUri);
 		newFragment.show(fm, FRAGMENT_TAG);
 	}
+	
 
-	private static EditAddressBookEntryFragment instance(@Nonnull final String address, @Nullable final String suggestedAddressLabel)
+	private static EditAddressBookEntryFragment instance(@Nonnull final String address, @Nullable final String suggestedAddressLabel, @Nullable final Uri suggestedPhotoUri)
 	{
 		final EditAddressBookEntryFragment fragment = new EditAddressBookEntryFragment();
 
 		final Bundle args = new Bundle();
 		args.putString(KEY_ADDRESS, address);
 		args.putString(KEY_SUGGESTED_ADDRESS_LABEL, suggestedAddressLabel);
+		args.putParcelable(KEY_SUGGESTED_PHOTO_URI, suggestedPhotoUri);
 		fragment.setArguments(args);
 
 		return fragment;
@@ -112,6 +120,7 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 		final Bundle args = getArguments();
 		final String address = args.getString(KEY_ADDRESS);
 		final String suggestedAddressLabel = args.getString(KEY_SUGGESTED_ADDRESS_LABEL);
+		final Uri suggestedPhotoUri = args.getParcelable(KEY_SUGGESTED_PHOTO_URI);
 
 		final LayoutInflater inflater = LayoutInflater.from(activity);
 
@@ -123,6 +132,9 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 			label = entry.getLabel();
 			photoUri = entry.getPhotoUri();
 		}
+		
+		if (photoUri == null)
+			photoUri = suggestedPhotoUri;
 		
 		final boolean isAdd = entry == null;
 
