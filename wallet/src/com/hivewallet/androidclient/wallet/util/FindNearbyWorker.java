@@ -10,6 +10,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
 
 import android.bluetooth.BluetoothAdapter;
@@ -27,11 +30,10 @@ import android.os.Message;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.provider.ContactsContract.Contacts;
-import android.util.Log;
 
 public class FindNearbyWorker extends Thread
 {
-	private static final String TAG = "com.example.hive_mockup1";
+	private static final Logger log = LoggerFactory.getLogger(FindNearbyWorker.class);
 	
 	public static final int MESSAGE_IS_BUSY = 0;
 	public static final int MESSAGE_IS_NOT_BUSY = 1;
@@ -300,7 +302,7 @@ public class FindNearbyWorker extends Thread
 				userRecord = lookupUserRecord();
 			
 			if (userRecord == null) { /* still no user record? abort */
-				Log.d(TAG, "Unable to lookup user details for broadcasting.");
+				log.warn("Unable to lookup user details for broadcasting.");
 				serverIsRunning = false;
 			}
 			
@@ -309,13 +311,11 @@ public class FindNearbyWorker extends Thread
 			while (serverIsRunning) {
 				try
 				{
-					Log.d(TAG, "Listening on Bluetooth server socket");
 					serverSocket = bluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(FIND_NEARBY_NAME, FIND_NEARBY_UUID);
 					clientSocket = serverSocket.accept();
 					serverSocket.close();	/* stop server while we serve the client */
 					
 					if (clientSocket != null) {
-						Log.d(TAG, "New connection from: " + clientSocket.getRemoteDevice().getName());
 						currentBackoff = INITIAL_BACKOFF;	/* seems like we connected successfully */
 
 						sendInfo(clientSocket);
@@ -324,8 +324,6 @@ public class FindNearbyWorker extends Thread
 				catch (IOException e)
 				{
 					if (serverIsRunning) {
-						Log.d(TAG, "Error while listening for Bluetooth connections: " + e);
-						
 						try { Thread.sleep(currentBackoff * 1000); }
 						catch (InterruptedException ignored) {}
 						
@@ -343,7 +341,7 @@ public class FindNearbyWorker extends Thread
 				Thread timeoutThread = new TimeoutThread(clientSocket);
 				timeoutThread.start();
 				
-				Log.d(TAG, "Sending data to: " + clientSocket.getRemoteDevice().getName());
+				log.info("Sending contact data to: {}", clientSocket.getRemoteDevice().getName());
 				OutputStream outStream = clientSocket.getOutputStream();
 				userRecord.writeDelimitedTo(outStream);
 				
@@ -353,7 +351,6 @@ public class FindNearbyWorker extends Thread
 				} catch (IOException ignored) {};
 			} catch (IOException e) {
 				/* something went wrong, give up on this client */
-				Log.d(TAG, "While sending data to a Bluetooth client: " + e);
 			} finally {
 				try {
 					clientSocket.close();
@@ -363,7 +360,6 @@ public class FindNearbyWorker extends Thread
 		}
 		
 		public void cancel() {
-			Log.d(TAG, "Closing Bluetooth server socket");
 			serverIsRunning = false;
 			try {
 				if (serverSocket != null)
@@ -393,8 +389,6 @@ public class FindNearbyWorker extends Thread
 			if (address == null)
 				return;
 			
-			Log.d(TAG, "Attempting connection to: " + address);
-			
 			incBluetoothActivity();
 			BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
 			BluetoothSocket clientSocket = null;
@@ -403,7 +397,6 @@ public class FindNearbyWorker extends Thread
 			{
 				clientSocket = device.createInsecureRfcommSocketToServiceRecord(FIND_NEARBY_UUID);
 				clientSocket.connect();
-				Log.d(TAG, "Successful connection with: " + address);
 				
 				/* make sure that this client does not block us forever */
 				Thread timeoutThread = new TimeoutThread(clientSocket);
@@ -412,11 +405,9 @@ public class FindNearbyWorker extends Thread
 				InputStream inStream = clientSocket.getInputStream();
 				FindNearbyContact contact = FindNearbyContact.parseDelimitedFrom(address, inStream);
 				
-				Log.d(TAG, "Received from Bluetooth device: " + contact);
 				reportReceivedContact(contact);
 			} catch (IOException e) {
 				/* something went wrong, give up on this client */
-				Log.d(TAG, "IOException in ReceiveInfoThread: " + e);
 			} finally {
 				if (clientSocket != null) {
 					try	{

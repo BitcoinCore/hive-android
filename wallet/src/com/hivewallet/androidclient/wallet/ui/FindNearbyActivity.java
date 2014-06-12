@@ -29,13 +29,11 @@ import android.os.Handler;
 import android.os.Handler.Callback;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.widget.ListView;
 import android.widget.TextView;
 
 public class FindNearbyActivity extends FragmentActivity implements Callback
 {
-	private static final String TAG = "com.example.hive_mockup1";
 	private static final int REQUEST_DISCOVERABLE = 0;
 	
 	private static final int RECHECK_INTERVAL = 10;	/* seconds */
@@ -273,7 +271,6 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 		public void onReceive(Context context, Intent intent)
 		{
 			String action = intent.getAction();
-			Log.d(TAG, "BroadcastReceiver: " + action);
 			
 			if (BluetoothDevice.ACTION_FOUND.equals(action)) {
 				BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
