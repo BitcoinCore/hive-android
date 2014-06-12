@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	style="@style/ActivityPadding"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent" >
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical" >
+
+		<ImageView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:contentDescription="@string/find_nearby"
+			android:paddingTop="32dp"
+			android:src="@drawable/perm_group_location_black" />
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center"
+			android:paddingBottom="32dp"
+			android:paddingLeft="32dp"
+			android:paddingRight="32dp"
+			android:paddingTop="8dp"
+			android:text="@string/find_nearby_introduction"
+			android:textSize="@dimen/font_size_normal" />
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center"
+			android:paddingBottom="32dp"
+			android:paddingLeft="32dp"
+			android:paddingRight="32dp"
+			android:text="@string/find_nearby_introduction2"
+			android:textSize="@dimen/font_size_normal" />
+
+		<ListView
+			android:id="@+id/lv_user"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:paddingBottom="32dp"
+			android:paddingLeft="32dp"
+			android:paddingRight="32dp" />
+
+		<Button
+			android:id="@+id/b_start"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:text="@string/let_s_go"
+			android:textSize="@dimen/font_size_normal" />
+
+		<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:orientation="vertical" >
+
+			<CheckBox
+				android:id="@+id/cb_via_bluetooth"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:checked="true"
+				android:paddingRight="16dp"
+				android:text="@string/search_via_bluetooth"
+				android:textSize="@dimen/font_size_tiny" />
+
+			<CheckBox
+				android:id="@+id/cb_via_server"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginTop="-8dp"
+				android:checked="false"
+				android:enabled="false"
+				android:paddingRight="16dp"
+				android:text="@string/search_via_hive_server"
+				android:textSize="@dimen/font_size_tiny" />
+		</LinearLayout>
+	</LinearLayout>
+
+</ScrollView>

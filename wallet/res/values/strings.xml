@@ -299,11 +299,15 @@
 	<string name="add_contact_choice_qr">Scan Bitcoin address from QR code</string>
 	<string name="add_contact_choice_clipboard">Import Bitcoin address from clipboard</string>
 	<string name="add_contact_choice_findnearby">Find Hive users nearby</string>
-	<string name="bluetooth_unavailable">Bluetooth unavailable</string>
-	<string name="become_visible">Become visible</string>
-	<string name="you">You</string>
 	<string name="users_nearby">Other Hive users nearby</string>
 	<string name="empty_nearby">No users found so far</string>
 	<string name="find_nearby">Find Nearby</string>
+	<string name="find_nearby_introduction">You are about to become visible to other Hive users around you. Once you close this dialog, you will be invisible again.</string>
+	<string name="find_nearby_introduction2">This is how you will appear to others:</string>
+	<string name="let_s_go">Let\'s go</string>
+	<string name="search_via_bluetooth">Search via Bluetooth</string>
+	<string name="search_via_hive_server">Search via Hive server (coming soon)</string>
+	<string name="searching_via_bluetooth">Searching via Bluetooth...</string>
+	<string name="find_nearby_connecting">Trying to talk to device \"%s\"...</string>
 
 </resources>

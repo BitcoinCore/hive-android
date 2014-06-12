@@ -146,7 +146,7 @@ public class AddContactChoiceFragment extends DialogFragment
 	
 	private void handleFindNearby()
 	{
-		activity.startActivity(new Intent(activity, FindNearbyActivity.class));
+		activity.startActivity(new Intent(activity, FindNearbyPrepActivity.class));
 	}		
 	
 	public static void show(FragmentManager manager) {

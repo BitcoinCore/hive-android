@@ -5,20 +5,21 @@
 	android:layout_height="match_parent"
 	android:orientation="vertical" >
 
+	<ImageView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_horizontal"
+		android:contentDescription="@string/find_nearby"
+		android:paddingTop="16dp"
+		android:src="@drawable/perm_group_location_black" />
+
 	<TextView
+		android:id="@+id/tv_status"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:layout_marginLeft="@dimen/list_entry_padding_horizontal_lax"
-		android:layout_marginRight="@dimen/list_entry_padding_horizontal_lax"
-		android:layout_marginTop="8dp"
-		android:text="@string/you"
-		android:textSize="@dimen/font_size_small"
-		android:textStyle="bold" />
-
-	<ListView
-		android:id="@+id/lv_user"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content" />
+		android:gravity="center"
+		android:paddingBottom="16dp"
+		android:textSize="@dimen/font_size_small" />
 
 	<TextView
 		android:layout_width="match_parent"
@@ -46,14 +47,5 @@
 		android:text="@string/empty_nearby"
 		android:textSize="@dimen/font_size_normal"
 		android:visibility="gone" />
-
-	<Button
-		android:id="@+id/b_visibility"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_gravity="center_horizontal"
-		android:drawableLeft="@drawable/ic_menu_view_black"
-		android:text="@string/become_visible"
-		android:textSize="@dimen/font_size_normal" />
 
 </LinearLayout>
