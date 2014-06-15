@@ -1,7 +1,5 @@
 package com.hivewallet.androidclient.wallet.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -13,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hivewallet.androidclient.wallet.AddressBookProvider;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -21,15 +18,8 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.ContactsContract;
-import android.provider.MediaStore;
-import android.provider.ContactsContract.Contacts;
 
 public class FindNearbyBluetoothWorker extends Thread
 {
@@ -201,50 +191,6 @@ public class FindNearbyBluetoothWorker extends Thread
 		handler.sendMessage(msg);
 	}
 	
-	private FindNearbyContact lookupUserRecord()
-	{
-		FindNearbyContact record = null;
-		final String[] projection = { Contacts.PHOTO_URI, Contacts.DISPLAY_NAME };
-		Cursor cursor = contentResolver.query
-				( ContactsContract.Profile.CONTENT_URI
-				, projection
-				, null
-				, null
-				, null
-				);
-		
-		if (cursor.moveToNext()) {
-			String name = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.DISPLAY_NAME));
-			String photoUriStr = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.PHOTO_URI));
-			
-			Uri photoUri = null;
-			if (photoUriStr != null)
-				photoUri = Uri.parse(photoUriStr);
-
-			byte[] photo = null;
-			if (photoUri != null) {
-				try
-				{
-					Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, photoUri);
-					Bitmap scaledBitmap = AddressBookProvider.ensureReasonableSize(bitmap);
-					if (scaledBitmap == null)
-						throw new IOException();
-					
-					ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-					scaledBitmap.compress(CompressFormat.PNG, 100, outStream);
-					photo = outStream.toByteArray();
-				}
-				catch (FileNotFoundException ignored) {}
-				catch (IOException ignored) {}
-			}
-			
-			record = new FindNearbyContact(bitcoinAddress, name, photo);
-		}
-		
-		cursor.close();
-		return record;
-	}
-	
 	public void shutdown() {
 		isRunning = false;
 		becomeInvisible();
@@ -299,7 +245,7 @@ public class FindNearbyBluetoothWorker extends Thread
 		public void run()
 		{
 			if (userRecord == null)
-				userRecord = lookupUserRecord();
+				userRecord = FindNearbyContact.lookupUserRecord(contentResolver, bitcoinAddress);
 			
 			if (userRecord == null) { /* still no user record? abort */
 				log.warn("Unable to lookup user details for broadcasting.");

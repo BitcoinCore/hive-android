@@ -11,7 +11,9 @@ import com.hivewallet.androidclient.wallet_test.R;
 import com.squareup.picasso.Picasso;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.Context;
 import android.database.Cursor;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -28,12 +30,10 @@ import android.widget.ListView;
 
 public class FindNearbyPrepActivity extends FragmentActivity implements LoaderCallbacks<Cursor>
 {
-	private static final Logger log = LoggerFactory.getLogger(FindNearbyPrepActivity.class);
-	
 	private SimpleCursorAdapter userSimpleCursorAdapter;
 	
 	@InjectView(R.id.cb_via_bluetooth) CheckBox viaBluetoothCheckbox;
-	@InjectView(R.id.cb_via_server) CheckBox viaServer;
+	@InjectView(R.id.cb_via_server) CheckBox viaServerCheckbox;
 	@InjectView(R.id.lv_user) ListView userListView;
 	
 	@Override
@@ -48,6 +48,13 @@ public class FindNearbyPrepActivity extends FragmentActivity implements LoaderCa
 			/* no Bluetooth available */
 			viaBluetoothCheckbox.setChecked(false);
 			viaBluetoothCheckbox.setEnabled(false);
+		}
+		
+		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		if (locationManager == null) {
+			/* no GPS available */
+			viaServerCheckbox.setChecked(false);
+			viaServerCheckbox.setEnabled(false);
 		}
 		
 		setupUserListView();
@@ -72,7 +79,6 @@ public class FindNearbyPrepActivity extends FragmentActivity implements LoaderCa
 		{
 			public boolean setViewValue(View view, Cursor cursor, int columnIndex)
 			{
-				log.info("in setViewValue");
 				switch (view.getId()) {
 					case R.id.iv_user_photo:
 						return setUserPhoto((ImageView)view, cursor, columnIndex);
@@ -83,7 +89,6 @@ public class FindNearbyPrepActivity extends FragmentActivity implements LoaderCa
 
 			private boolean setUserPhoto(ImageView imageView, Cursor cursor, int columnIndex)
 			{
-				log.info("in setUserPhoto");
 				String photo = cursor.getString(columnIndex);
 				Uri uri = null;
 				if (photo != null)
@@ -98,21 +103,18 @@ public class FindNearbyPrepActivity extends FragmentActivity implements LoaderCa
 			}
 		});
 		
-		log.info("adapter set");
 		userListView.setAdapter(userSimpleCursorAdapter);
 		
-		log.info("initLoader() called");
 		getSupportLoaderManager().initLoader(0, null, this);
 	}
 	
 	@OnClick(R.id.b_start) void start() {
-		FindNearbyActivity.start(this, viaBluetoothCheckbox.isChecked(), viaServer.isChecked());
+		FindNearbyActivity.start(this, viaBluetoothCheckbox.isChecked(), viaServerCheckbox.isChecked());
 	}
 	
 	@Override
 	public Loader<Cursor> onCreateLoader(int loaderId, Bundle args)
 	{
-		log.info("onCreateLoader called");
 		CursorLoader loader = new CursorLoader
 				( this
 				, ContactsContract.Profile.CONTENT_URI
@@ -127,14 +129,12 @@ public class FindNearbyPrepActivity extends FragmentActivity implements LoaderCa
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)
 	{
-		log.info("onLoadFinished called");
 		userSimpleCursorAdapter.swapCursor(cursor);
 	}
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> arg0)
 	{
-		log.info("onLoadReset called");
 		userSimpleCursorAdapter.swapCursor(null);
 	}	
 }

@@ -2,9 +2,11 @@ package com.hivewallet.androidclient.wallet.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -12,14 +14,22 @@ import javax.annotation.Nullable;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
+import android.provider.ContactsContract;
+import android.provider.ContactsContract.Contacts;
+import android.provider.MediaStore;
+import android.util.Base64;
 
 import com.google.protobuf.ByteString;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
@@ -29,6 +39,11 @@ import com.hivewallet.androidclient.wallet.Protos.Contact.Builder;
 
 public class FindNearbyContact {
 	private static final Logger log = LoggerFactory.getLogger(FindNearbyContact.class);
+	
+	private static final String JSON_FIELD_NAME = "name";
+	private static final String JSON_FIELD_BITCOIN_ADDRESS = "address";
+	private static final String JSON_FIELD_EMAIL = "email";
+	private static final String JSON_FIELD_PHOTO = "photo";
 	
 	private String bluetoothAddress = null;
 	private String bitcoinAddress = null;
@@ -63,6 +78,17 @@ public class FindNearbyContact {
 	public String toString()
 	{
 		return toProtos().toString();
+	}
+	
+	public JSONObject toJSONObject() throws JSONException
+	{
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put(JSON_FIELD_NAME, name);
+		jsonObject.put(JSON_FIELD_EMAIL, "");
+		jsonObject.put(JSON_FIELD_BITCOIN_ADDRESS, bitcoinAddress);
+		if (photo != null)
+			jsonObject.put(JSON_FIELD_PHOTO, Base64.encodeToString(photo, Base64.DEFAULT));
+		return jsonObject;
 	}
 	
 	public String getName()
@@ -135,6 +161,29 @@ public class FindNearbyContact {
 		} catch (IOException ignored) {}
 	}
 	
+	public boolean hasSameData(FindNearbyContact otherContact) {
+		if (!areSameStrings(bitcoinAddress, otherContact.getBitcoinAddress()))
+			return false;
+		
+		if (!areSameStrings(name, otherContact.getName()))
+			return false;
+		
+		if (!Arrays.equals(photo, otherContact.getPhoto()))
+			return false;
+		
+		return true;
+	}
+	
+	private boolean areSameStrings(String a, String b) {
+		if (a == null && b == null)
+			return true;
+		
+		if (a == null || b == null)
+			return false;
+		
+		return a.equals(b);
+	}
+	
 	private Contact toProtos() {
 		Builder builder = Contact.newBuilder()
 				.setVersionMajor(1)
@@ -146,7 +195,7 @@ public class FindNearbyContact {
 		
 		return builder.build();
 	}
-	
+
 	public static FindNearbyContact parseDelimitedFrom(String bluetoothAddress, InputStream input) throws IOException
 	{
 		Contact contact = Contact.parseDelimitedFrom(input);
@@ -163,4 +212,64 @@ public class FindNearbyContact {
 		
 		return new FindNearbyContact(bluetoothAddress, bitcoinAddress, name, photo);
 	}
+	
+	public static FindNearbyContact fromJSONObject(JSONObject jsonObject) throws JSONException
+	{
+		String bitcoinAddress = jsonObject.getString(JSON_FIELD_BITCOIN_ADDRESS);
+		String name = jsonObject.getString(JSON_FIELD_NAME);
+		String photoBase64 = jsonObject.optString(JSON_FIELD_PHOTO);
+		
+		byte[] photo = null;
+		if (photoBase64 != null && !photoBase64.isEmpty()) {
+			try {
+				photo = Base64.decode(photoBase64, Base64.DEFAULT);
+			} catch (IllegalArgumentException e) { /* discard photo data */ }
+		}
+			
+		return new FindNearbyContact(bitcoinAddress, name, photo);
+	}
+	
+	public static FindNearbyContact lookupUserRecord(ContentResolver contentResolver, String bitcoinAddress)
+	{
+		FindNearbyContact record = null;
+		final String[] projection = { Contacts.PHOTO_URI, Contacts.DISPLAY_NAME };
+		Cursor cursor = contentResolver.query
+				( ContactsContract.Profile.CONTENT_URI
+				, projection
+				, null
+				, null
+				, null
+				);
+		
+		if (cursor.moveToNext()) {
+			String name = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.DISPLAY_NAME));
+			String photoUriStr = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.PHOTO_URI));
+			
+			Uri photoUri = null;
+			if (photoUriStr != null)
+				photoUri = Uri.parse(photoUriStr);
+	
+			byte[] photo = null;
+			if (photoUri != null) {
+				try
+				{
+					Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, photoUri);
+					Bitmap scaledBitmap = AddressBookProvider.ensureReasonableSize(bitmap);
+					if (scaledBitmap == null)
+						throw new IOException();
+					
+					ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+					scaledBitmap.compress(CompressFormat.PNG, 100, outStream);
+					photo = outStream.toByteArray();
+				}
+				catch (FileNotFoundException ignored) {}
+				catch (IOException ignored) {}
+			}
+			
+			record = new FindNearbyContact(bitcoinAddress, name, photo);
+		}
+		
+		cursor.close();
+		return record;
+	}	
 }

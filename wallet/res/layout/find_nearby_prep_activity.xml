@@ -76,8 +76,7 @@
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:layout_marginTop="-8dp"
-				android:checked="false"
-				android:enabled="false"
+				android:checked="true"
 				android:paddingRight="16dp"
 				android:text="@string/search_via_hive_server"
 				android:textSize="@dimen/font_size_tiny" />

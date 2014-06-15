@@ -306,8 +306,9 @@
 	<string name="find_nearby_introduction2">This is how you will appear to others:</string>
 	<string name="let_s_go">Let\'s go</string>
 	<string name="search_via_bluetooth">Search via Bluetooth</string>
-	<string name="search_via_hive_server">Search via Hive server (coming soon)</string>
+	<string name="search_via_hive_server">Search via Hive server</string>
 	<string name="searching_via_bluetooth">Searching via Bluetooth...</string>
 	<string name="find_nearby_connecting">Trying to talk to device \"%s\"...</string>
+	<string name="searching_via_server">Searching via Hive server...</string>
 
 </resources>

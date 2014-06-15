@@ -43,6 +43,17 @@ public class FindNearbyAdapter extends ArrayAdapter<FindNearbyContact>
 		this.resource = resource;
 	}
 	
+	/** add a new contact to the adapter if it isn't already present **/
+	public void maybeAdd(FindNearbyContact contact) {
+		for (int i = 0; i < super.getCount(); i++) {
+			FindNearbyContact otherContact = super.getItem(i);
+			if (contact.hasSameData(otherContact))
+				return;
+		}
+		
+		super.add(contact);
+	}
+	
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{

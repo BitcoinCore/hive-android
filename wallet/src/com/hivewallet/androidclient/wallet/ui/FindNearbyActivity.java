@@ -14,6 +14,7 @@ import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.FindNearbyContact;
 import com.hivewallet.androidclient.wallet.util.FindNearbyBluetoothWorker;
+import com.hivewallet.androidclient.wallet.util.FindNearbyGPSWorker;
 import com.hivewallet.androidclient.wallet_test.R;
 
 import android.bluetooth.BluetoothAdapter;
@@ -65,6 +66,7 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 	private ContentResolver contentResolver;
 	private Handler handler;
 	private FindNearbyBluetoothWorker findNearbyBluetoothWorker = null;
+	private FindNearbyGPSWorker findNearbyGPSWorker = null;
 	
 	private FindNearbyAdapter arrayAdapter;
 	
@@ -75,6 +77,7 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 	private Random rnd = new Random();
 	
 	private WalletApplication application;
+	private Address bitcoinAddress;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -103,6 +106,7 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 		contentResolver = getContentResolver();
 		
 		application = (WalletApplication)getApplication();
+		bitcoinAddress = application.determineSelectedAddress();
 		
 		bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null) {
@@ -158,19 +162,32 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
         
 	        // setup worker
 	        if (findNearbyBluetoothWorker == null) {
-	        	Address address = application.determineSelectedAddress();
-	        	findNearbyBluetoothWorker = new FindNearbyBluetoothWorker(application, bluetoothAdapter, contentResolver, handler, address.toString());
+	        	findNearbyBluetoothWorker = new FindNearbyBluetoothWorker(application, bluetoothAdapter, contentResolver, handler, bitcoinAddress.toString());
 				findNearbyBluetoothWorker.start();
 	        }
 				
 	        manageDiscovery();
 	        startVisibility();
 		}
+		
+		if (useServer) {
+			if (findNearbyGPSWorker == null) {
+				findNearbyGPSWorker = new FindNearbyGPSWorker(application, handler, bitcoinAddress.toString());
+				findNearbyGPSWorker.start();
+			}
+		}
 	}
 	
 	@Override
 	protected void onPause()
 	{
+		if (useServer) {
+			if (findNearbyGPSWorker != null) {
+				findNearbyGPSWorker.shutdown();
+				findNearbyGPSWorker = null;
+			}
+		}
+		
 		if (useBluetooth) {
 			stopVisibility();
 			stopDiscovery();
@@ -297,9 +314,18 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 			case FindNearbyBluetoothWorker.MESSAGE_INFO_RECEIVED:
 				FindNearbyContact contact = (FindNearbyContact)msg.obj;
 				successfulCandidates.add(contact.getBluetoothAddress());
-				arrayAdapter.add(contact);
+				arrayAdapter.maybeAdd(contact);
+				return true;
 			case FindNearbyBluetoothWorker.MESSAGE_HEARTBEAT:
 				manageDiscovery(); /* use heartbeat to check/update discovery operation */
+				return true;
+			case FindNearbyGPSWorker.MESSAGE_IS_SEARCHING:
+				statusTextView.setText(getString(R.string.searching_via_server));
+				return true;
+			case FindNearbyGPSWorker.MESSAGE_INFO_RECEIVED:
+				FindNearbyContact contact2 = (FindNearbyContact)msg.obj;
+				arrayAdapter.maybeAdd(contact2);
+				return true;
 			default:
 				return false;
 		}
