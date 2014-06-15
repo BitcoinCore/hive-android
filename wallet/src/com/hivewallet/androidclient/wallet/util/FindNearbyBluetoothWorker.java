@@ -31,9 +31,9 @@ import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.provider.ContactsContract.Contacts;
 
-public class FindNearbyWorker extends Thread
+public class FindNearbyBluetoothWorker extends Thread
 {
-	private static final Logger log = LoggerFactory.getLogger(FindNearbyWorker.class);
+	private static final Logger log = LoggerFactory.getLogger(FindNearbyBluetoothWorker.class);
 	
 	public static final int MESSAGE_IS_BUSY = 0;
 	public static final int MESSAGE_IS_NOT_BUSY = 1;
@@ -57,7 +57,7 @@ public class FindNearbyWorker extends Thread
 	private boolean isRunning = true;
 	private boolean isBusy = false;
 	private int bluetoothActivityLevel = 0;
-	private final BlockingQueue<FindNearbyCommand> commands = new LinkedBlockingQueue<FindNearbyWorker.FindNearbyCommand>();
+	private final BlockingQueue<FindNearbyCommand> commands = new LinkedBlockingQueue<FindNearbyBluetoothWorker.FindNearbyCommand>();
 	
 	private final BlockingQueue<String> candidates = new LinkedBlockingQueue<String>();
 	
@@ -73,7 +73,7 @@ public class FindNearbyWorker extends Thread
 	private FindNearbyContact userRecord = null;
 	private String bitcoinAddress;
 	
-	public FindNearbyWorker(Context context, BluetoothAdapter bluetoothAdapter, ContentResolver contentResolver, Handler handler, String bitcoinAddress)
+	public FindNearbyBluetoothWorker(Context context, BluetoothAdapter bluetoothAdapter, ContentResolver contentResolver, Handler handler, String bitcoinAddress)
 	{
 		this.context = context;
 		this.bluetoothAdapter = bluetoothAdapter;

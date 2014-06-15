@@ -13,7 +13,7 @@ import com.google.bitcoin.core.Address;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.FindNearbyContact;
-import com.hivewallet.androidclient.wallet.util.FindNearbyWorker;
+import com.hivewallet.androidclient.wallet.util.FindNearbyBluetoothWorker;
 import com.hivewallet.androidclient.wallet_test.R;
 
 import android.bluetooth.BluetoothAdapter;
@@ -64,7 +64,7 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 
 	private ContentResolver contentResolver;
 	private Handler handler;
-	private FindNearbyWorker findNearbyWorker = null;
+	private FindNearbyBluetoothWorker findNearbyBluetoothWorker = null;
 	
 	private FindNearbyAdapter arrayAdapter;
 	
@@ -157,10 +157,10 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 	        this.registerReceiver(receiver, filter);
         
 	        // setup worker
-	        if (findNearbyWorker == null) {
+	        if (findNearbyBluetoothWorker == null) {
 	        	Address address = application.determineSelectedAddress();
-	        	findNearbyWorker = new FindNearbyWorker(application, bluetoothAdapter, contentResolver, handler, address.toString());
-				findNearbyWorker.start();
+	        	findNearbyBluetoothWorker = new FindNearbyBluetoothWorker(application, bluetoothAdapter, contentResolver, handler, address.toString());
+				findNearbyBluetoothWorker.start();
 	        }
 				
 	        manageDiscovery();
@@ -178,9 +178,9 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 			// unregister from broadcasts
 			this.unregisterReceiver(receiver);
 			
-			if (findNearbyWorker != null) {
-				findNearbyWorker.shutdown();
-				findNearbyWorker = null;
+			if (findNearbyBluetoothWorker != null) {
+				findNearbyBluetoothWorker.shutdown();
+				findNearbyBluetoothWorker = null;
 			}
 		}
 		
@@ -227,15 +227,15 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 		if (bluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE)
 			return;
 		
-		findNearbyWorker.becomeVisible();
+		findNearbyBluetoothWorker.becomeVisible();
 	}
 	
 	private void stopVisibility()
 	{
-		if (findNearbyWorker == null)
+		if (findNearbyBluetoothWorker == null)
 			return;
 		
-		findNearbyWorker.becomeInvisible();
+		findNearbyBluetoothWorker.becomeInvisible();
 	}
 	
 	private void enterDiscoveryCooloff()
@@ -262,7 +262,7 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 		workerIsBusy = true;	// worker will send us a non-busy message again eventually
 		manageDiscovery();
 		seenCandidates.put(address, System.currentTimeMillis());
-		findNearbyWorker.addCandidate(address);
+		findNearbyBluetoothWorker.addCandidate(address);
 	}
 	
 	private final BroadcastReceiver receiver = new BroadcastReceiver()
@@ -286,19 +286,19 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 	public boolean handleMessage(Message msg)
 	{
 		switch (msg.what) {
-			case FindNearbyWorker.MESSAGE_IS_BUSY:
+			case FindNearbyBluetoothWorker.MESSAGE_IS_BUSY:
 				workerIsBusy = true;
 				manageDiscovery();
 				return true;
-			case FindNearbyWorker.MESSAGE_IS_NOT_BUSY:
+			case FindNearbyBluetoothWorker.MESSAGE_IS_NOT_BUSY:
 				workerIsBusy = false;
 				manageDiscovery();
 				return true;
-			case FindNearbyWorker.MESSAGE_INFO_RECEIVED:
+			case FindNearbyBluetoothWorker.MESSAGE_INFO_RECEIVED:
 				FindNearbyContact contact = (FindNearbyContact)msg.obj;
 				successfulCandidates.add(contact.getBluetoothAddress());
 				arrayAdapter.add(contact);
-			case FindNearbyWorker.MESSAGE_HEARTBEAT:
+			case FindNearbyBluetoothWorker.MESSAGE_HEARTBEAT:
 				manageDiscovery(); /* use heartbeat to check/update discovery operation */
 			default:
 				return false;
