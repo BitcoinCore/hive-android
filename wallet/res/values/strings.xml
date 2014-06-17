@@ -303,8 +303,8 @@
 	<string name="empty_nearby">No users found so far</string>
 	<string name="find_nearby">Find Nearby</string>
 	<string name="find_nearby_introduction">You are about to become visible to other Hive users around you. Once you close this dialog, you will be invisible again.</string>
-	<string name="find_nearby_introduction2">This is how you will appear to others:</string>
-	<string name="let_s_go">Let\'s go</string>
+	<string name="find_nearby_introduction2">You will appear like this:</string>
+	<string name="start_search">Start search</string>
 	<string name="search_via_bluetooth">Search via Bluetooth</string>
 	<string name="search_via_hive_server">Search via Hive server</string>
 	<string name="searching_via_bluetooth">Searching via Bluetooth...</string>

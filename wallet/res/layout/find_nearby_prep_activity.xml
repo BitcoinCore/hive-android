@@ -15,8 +15,8 @@
 			android:layout_height="wrap_content"
 			android:layout_gravity="center_horizontal"
 			android:contentDescription="@string/find_nearby"
-			android:paddingTop="32dp"
-			android:src="@drawable/perm_group_location_black" />
+			android:paddingTop="16dp"
+			android:src="@drawable/perm_group_location_black_large" />
 
 		<TextView
 			android:layout_width="match_parent"
@@ -46,21 +46,23 @@
 			android:layout_gravity="center_horizontal"
 			android:paddingBottom="32dp"
 			android:paddingLeft="32dp"
-			android:paddingRight="32dp" />
+			android:paddingRight="32dp"
+			tools:ignore="NestedScrolling" />
 
 		<Button
 			android:id="@+id/b_start"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_gravity="center_horizontal"
-			android:text="@string/let_s_go"
-			android:textSize="@dimen/font_size_normal" />
+			android:text="@string/start_search"
+			android:textSize="@dimen/font_size_large" />
 
 		<LinearLayout
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_gravity="center_horizontal"
-			android:orientation="vertical" >
+			android:orientation="vertical"
+			android:paddingTop="16dp" >
 
 			<CheckBox
 				android:id="@+id/cb_via_bluetooth"
@@ -69,7 +71,7 @@
 				android:checked="true"
 				android:paddingRight="16dp"
 				android:text="@string/search_via_bluetooth"
-				android:textSize="@dimen/font_size_tiny" />
+				android:textSize="@dimen/font_size_normal" />
 
 			<CheckBox
 				android:id="@+id/cb_via_server"
@@ -79,7 +81,7 @@
 				android:checked="true"
 				android:paddingRight="16dp"
 				android:text="@string/search_via_hive_server"
-				android:textSize="@dimen/font_size_tiny" />
+				android:textSize="@dimen/font_size_normal" />
 		</LinearLayout>
 	</LinearLayout>
 
