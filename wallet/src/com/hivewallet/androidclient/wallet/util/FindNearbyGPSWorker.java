@@ -82,9 +82,21 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 			return;
 		}
 		
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, 0, this);
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, 0, this);
-
+		boolean hasAtLeastOneProvider = false;
+		try {
+			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, 0, this);
+			hasAtLeastOneProvider = true;
+		} catch (IllegalArgumentException discarded) {}
+		try {
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, 0, this);
+			hasAtLeastOneProvider = true;
+		} catch (IllegalArgumentException discarded) {}
+		
+		if (!hasAtLeastOneProvider) {
+			log.warn("Location manager has no suitable providers - GPS worker is shutting down.");
+			return;
+		}
+		
 		Looper.loop();
 	}
 
