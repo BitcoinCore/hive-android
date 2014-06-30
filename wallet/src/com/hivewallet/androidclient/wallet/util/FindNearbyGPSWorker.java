@@ -33,7 +33,7 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 	public static final int MESSAGE_IS_SEARCHING = 1000;
 	public static final int MESSAGE_INFO_RECEIVED = 1001;
 	
-	private static final String HIVE_SERVER = "https://hive-js.herokuapp.com/location";
+	private static final String HIVE_SERVER = "https://web.hivewallet.com/location";
 	private static final String JSON_FIELD_LATITUDE = "lat";
 	private static final String JSON_FIELD_LONGITUDE = "lon";
 	private static final int SEARCH_INTERVAL = 8 * 1000;
