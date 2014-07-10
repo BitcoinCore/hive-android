@@ -10,6 +10,7 @@ Hive Android is an open-source standalone Bitcoin wallet. No external server or 
 ▫ Touch-to-pay via NFC
 • Support for payment protocol (BIP70) for increased security, reliability and speed in making payments
 • Find other Hive users nearby via Bluetooth or GPS
+• Sweep private keys to import funds from paper wallets
 • Hive app store offers close integration with the rest of the Bitcoin ecosystem. Apps available for LocalBitcoins.com, Bitstamp, piiko and others.
 • Works offline: Stores transactions for later sending or transmits them via Bluetooth
 • Amounts displayed in BTC, mBTC or µBTC with exchange rate information alongside
