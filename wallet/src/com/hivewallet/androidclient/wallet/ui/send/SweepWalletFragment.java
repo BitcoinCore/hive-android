@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,7 +17,9 @@ import android.os.HandlerThread;
 import android.os.Process;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentManager;
-import android.text.SpannableStringBuilder;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,15 +45,18 @@ import com.google.bitcoin.wallet.WalletTransaction.Pool;
 
 import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.Constants;
+import com.hivewallet.androidclient.wallet.ExchangeRatesProvider;
 import com.hivewallet.androidclient.wallet.WalletApplication;
+import com.hivewallet.androidclient.wallet.ExchangeRatesProvider.ExchangeRate;
 import com.hivewallet.androidclient.wallet.data.PaymentIntent;
 import com.hivewallet.androidclient.wallet.ui.AbstractBindServiceActivity;
+import com.hivewallet.androidclient.wallet.ui.CurrencyPlusInfoTextView;
 import com.hivewallet.androidclient.wallet.ui.DialogBuilder;
 import com.hivewallet.androidclient.wallet.ui.InputParser.StringInputParser;
+import com.hivewallet.androidclient.wallet.ui.ExchangeRateLoader;
 import com.hivewallet.androidclient.wallet.ui.ProgressDialogFragment;
 import com.hivewallet.androidclient.wallet.ui.ScanActivity;
 import com.hivewallet.androidclient.wallet.ui.TransactionsListAdapter;
-import com.hivewallet.androidclient.wallet.util.GenericUtils;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
 import com.hivewallet.androidclient.wallet_test.R;
 
@@ -63,6 +69,7 @@ public class SweepWalletFragment extends SherlockFragment
 	private WalletApplication application;
 	private Configuration config;
 	private FragmentManager fragmentManager;
+	private LoaderManager loaderManager;
 
 	private final Handler handler = new Handler();
 	private HandlerThread backgroundThread;
@@ -71,9 +78,11 @@ public class SweepWalletFragment extends SherlockFragment
 	private State state = State.INPUT;
 	private Wallet walletToSweep = null;
 	private Transaction sentTransaction = null;
+	private ExchangeRate exchangeRate = null;
 
 	private View walletUnknownView;
-	private TextView balanceView;
+	private CurrencyPlusInfoTextView balanceView;
+	private TextView balanceLabelView;
 	private TransactionsListAdapter sweepTransactionListAdapter;
 	private View hintView;
 	private ListView sweepTransactionView;
@@ -84,6 +93,8 @@ public class SweepWalletFragment extends SherlockFragment
 	private MenuItem scanAction;
 
 	private static final int REQUEST_CODE_SCAN = 0;
+	
+	private static final int ID_RATE_LOADER = 0;
 
 	private enum State
 	{
@@ -100,6 +111,7 @@ public class SweepWalletFragment extends SherlockFragment
 		this.config = application.getConfiguration();
 		this.config = new Configuration(PreferenceManager.getDefaultSharedPreferences(activity));
 		this.fragmentManager = getFragmentManager();
+		this.loaderManager = getLoaderManager();
 	}
 
 	@Override
@@ -141,7 +153,8 @@ public class SweepWalletFragment extends SherlockFragment
 
 		walletUnknownView = view.findViewById(R.id.sweep_wallet_fragment_wallet_unknown);
 
-		balanceView = (TextView) view.findViewById(R.id.sweep_wallet_fragment_balance);
+		balanceView = (CurrencyPlusInfoTextView) view.findViewById(R.id.sweep_wallet_fragment_balance);
+		balanceLabelView = (TextView) view.findViewById(R.id.sweep_wallet_fragment_balance_label);
 
 		hintView = view.findViewById(R.id.sweep_wallet_fragment_hint);
 
@@ -179,8 +192,18 @@ public class SweepWalletFragment extends SherlockFragment
 	public void onResume()
 	{
 		super.onResume();
+		
+		loaderManager.initLoader(ID_RATE_LOADER, null, rateLoaderCallbacks);
 
 		updateView();
+	}
+	
+	@Override
+	public void onPause()
+	{
+		loaderManager.destroyLoader(ID_RATE_LOADER);
+		
+		super.onPause();
 	}
 
 	@Override
@@ -414,21 +437,20 @@ public class SweepWalletFragment extends SherlockFragment
 			final int btcPrecision = config.getBtcMaxPrecision();
 			final String btcPrefix = config.getBtcPrefix();
 
+			balanceView.setPrecision(btcPrecision, btcShift);
+			balanceView.setExchangeRate(exchangeRate);
+			balanceView.setValidExchangeRate(!Constants.TEST);
+			balanceView.setUseBold(true);
+			balanceView.setAmount(walletToSweep.getBalance(BalanceType.ESTIMATED), btcPrefix);
 			balanceView.setVisibility(View.VISIBLE);
-			final SpannableStringBuilder balance = new SpannableStringBuilder(GenericUtils.formatValue(
-					walletToSweep.getBalance(BalanceType.ESTIMATED), btcPrecision, btcShift));
-			WalletUtils.formatSignificant(balance, null);
-			balance.insert(0, " "); // insert backwards
-			balance.insert(0, btcPrefix);
-			balance.insert(0, ": ");
-			balance.insert(0, getString(R.string.sweep_wallet_fragment_balance));
-			balanceView.setText(balance);
+			balanceLabelView.setVisibility(View.VISIBLE);
 			walletUnknownView.setVisibility(View.GONE);
 		}
 		else
 		{
 			walletUnknownView.setVisibility(View.VISIBLE);
 			balanceView.setVisibility(View.GONE);
+			balanceLabelView.setVisibility(View.GONE);
 		}
 
 		hintView.setVisibility(state == State.INPUT ? View.VISIBLE : View.GONE);
@@ -519,4 +541,29 @@ public class SweepWalletFragment extends SherlockFragment
 			}
 		}.sendCoinsOffline(sendRequest); // send asynchronously
 	}
+	
+	private final LoaderCallbacks<Cursor> rateLoaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>()
+	{
+		@Override
+		public Loader<Cursor> onCreateLoader(final int id, final Bundle args)
+		{
+			return new ExchangeRateLoader(activity, config);
+		}
+
+		@Override
+		public void onLoadFinished(final Loader<Cursor> loader, final Cursor data)
+		{
+			if (data != null && data.getCount() > 0)
+			{
+				data.moveToFirst();
+				exchangeRate = ExchangeRatesProvider.getExchangeRate(data);
+				updateView();
+			}
+		}
+
+		@Override
+		public void onLoaderReset(final Loader<Cursor> loader)
+		{
+		}
+	};	
 }

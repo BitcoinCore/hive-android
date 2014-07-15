@@ -28,12 +28,24 @@
 		android:textStyle="bold" />
 
 	<TextView
-		android:id="@+id/sweep_wallet_fragment_balance"
+		android:id="@+id/sweep_wallet_fragment_balance_label"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:layout_marginLeft="@dimen/list_entry_padding_horizontal_lax"
 		android:layout_marginRight="@dimen/list_entry_padding_horizontal_lax"
 		android:layout_marginTop="8dp"
+		android:gravity="center_horizontal"
+		android:text="@string/sweep_wallet_fragment_balance"
+		android:textSize="@dimen/font_size_normal" />
+		/>
+
+	<com.hivewallet.androidclient.wallet.ui.CurrencyPlusInfoTextView
+		android:id="@+id/sweep_wallet_fragment_balance"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginLeft="@dimen/list_entry_padding_horizontal_lax"
+		android:layout_marginRight="@dimen/list_entry_padding_horizontal_lax"
+		android:gravity="center_horizontal"
 		android:textSize="@dimen/font_size_normal" />
 
 	<!-- stretch dummy -->

@@ -87,7 +87,7 @@
 	<string name="sweep_wallet_fragment_intro">You are about to sweep a paper wallet or coupon. This will move all coins from that paper to your wallet on this device. When the transaction is confirmed, the paper will be worthless and should not be re-used for safety reasons.</string>
 	<string name="sweep_wallet_fragment_hint">Paper wallets are most commonly used for cold storage. Some ATMs print them on their paper slip rather than sending the coins to your mobile device directly. People sometimes use pre-charged paper wallets to pass value around (not recommended).</string>
 	<string name="sweep_wallet_fragment_wallet_unknown">Start by scanning the private key of a paper wallet. Use the camera action button.</string>
-	<string name="sweep_wallet_fragment_balance">Balance to sweep</string>
+	<string name="sweep_wallet_fragment_balance">Balance to sweep:</string>
 	<string name="sweep_wallet_fragment_button_sweep">Sweep</string>
 	<string name="sweep_wallet_fragment_request_wallet_balance_progress">Loading balance…</string>
 	<string name="sweep_wallet_fragment_request_wallet_balance_failed_title">Loading wallet balance failed</string>

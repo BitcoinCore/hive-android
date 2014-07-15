@@ -183,7 +183,7 @@
 			android:name="com.hivewallet.androidclient.wallet.ui.send.SweepWalletActivity"
 			android:configChanges="keyboard|keyboardHidden"
 			android:label="@string/sweep_wallet_activity_title"
-			android:screenOrientation="behind"
+			android:screenOrientation="portrait"
 			android:windowSoftInputMode="adjustResize" />
 		<activity
 			android:name="com.hivewallet.androidclient.wallet.ui.AppPlatformActivity"
