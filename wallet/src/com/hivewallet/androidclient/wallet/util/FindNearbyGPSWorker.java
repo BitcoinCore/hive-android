@@ -34,8 +34,10 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 	public static final int MESSAGE_INFO_RECEIVED = 1001;
 	
 	private static final String HIVE_SERVER = "https://web.hivewallet.com/location";
+	private static final String JSON_FIELD_NETWORK = "network";
 	private static final String JSON_FIELD_LATITUDE = "lat";
 	private static final String JSON_FIELD_LONGITUDE = "lon";
+	private static final String BITCOIN_NETWORK = "bitcoin";
 	private static final int SEARCH_INTERVAL = 8 * 1000;
 	private static final int LOCATION_INTERVAL = 300;
 	private static final int TWO_MINUTES = 2 * 60 * 1000;
@@ -48,13 +50,12 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 	
 	private Handler handler;
 	
+	private FindNearbyContact userRecord;
 	private String bitcoinAddress;
 	
-	private boolean isFirstRequest = true;
-
 	private LocationManager locationManager;
 	private Location currentBestLocation = null;
-	private long lastSearchTimestamp = 0;
+	private long lastActivityTimestamp = 0;
 	
 	public FindNearbyGPSWorker(Context context, Handler parentHandler, String bitcoinAddress)
 	{
@@ -75,6 +76,12 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 	{
 		Looper.prepare();
 		handler = new Handler();
+		
+		userRecord = FindNearbyContact.lookupUserRecord(context.getContentResolver(), bitcoinAddress);
+		if (userRecord == null) {
+			log.warn("Unable to lookup user details in preparation of Hive geo server search - GPS worker is shutting down.");
+			return;
+		}
 		
 		locationManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
 		if (locationManager == null) {
@@ -127,42 +134,49 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 		if (currentBestLocation == null)
 			return;
 		
-		long timestamp = System.currentTimeMillis();
-		if (timestamp - lastSearchTimestamp < SEARCH_INTERVAL) {
+		if (System.currentTimeMillis() - lastActivityTimestamp < SEARCH_INTERVAL) {
 			/* do not hit the server too often - try again in a little while */
 			handler.removeCallbacks(registerAndSearchRunnable);
 			handler.postDelayed(registerAndSearchRunnable, SEARCH_INTERVAL);
 			return;
 		}
 		
-		FindNearbyContact userRecord = FindNearbyContact.lookupUserRecord(
-				context.getContentResolver(), bitcoinAddress);
-		if (userRecord == null) {
-			log.warn("Unable to lookup user details in preparation of Hive geo server search.");
-			return;
-		}
+		register();
+		search();
+	}
+	
+	private JSONObject prepareJSONRequest() {
+		if (userRecord == null)
+			return null;
 		
 		JSONObject userJSONObject = null;
 		try {
 			userJSONObject = userRecord.toJSONObject();
+			userJSONObject.put(JSON_FIELD_NETWORK, BITCOIN_NETWORK);
 		} catch (JSONException e) {
 			log.warn("Unable to serialize user details to JSON");
-			return;
+			return null;
 		}
-		
-		log.info("Conntacting Hive server...");
-		lastSearchTimestamp = timestamp;
 		
 		try	{
 			userJSONObject.put(JSON_FIELD_LATITUDE, currentBestLocation.getLatitude());
 			userJSONObject.put(JSON_FIELD_LONGITUDE, currentBestLocation.getLongitude());
 		} catch (JSONException e) {
 			log.warn("Unable to serialize user position to JSON");
+			return null;
 		}
-		String jsonRequest = userJSONObject.toString();
 		
-		if (!isFirstRequest)
-			unregister();
+		return userJSONObject;
+	}
+	
+	private void search() {
+		JSONObject userJSONObject = prepareJSONRequest();
+		if (userJSONObject == null)
+			return;
+		
+		log.info("Searching via Hive server...");
+		lastActivityTimestamp = System.currentTimeMillis();
+		String jsonRequest = userJSONObject.toString();
 		
 		reportSearching();
 		HttpURLConnection conn = null;
@@ -171,6 +185,7 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 		try
 		{
 			conn = (HttpURLConnection)hiveServer.openConnection();
+			conn.setRequestMethod("PUT");
 			conn.setDoInput(true);
 			conn.setDoOutput(true);
 			conn.setFixedLengthStreamingMode(jsonRequest.length());
@@ -215,8 +230,44 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 			if (inStream != null)
 				try { inStream.close(); } catch (IOException ignored) { }
 		}
+	}
+	
+	private void register() {
+		JSONObject userJSONObject = prepareJSONRequest();
+		if (userJSONObject == null)
+			return;
 		
-		isFirstRequest = false;
+		log.info("Registering with Hive server...");
+		lastActivityTimestamp = System.currentTimeMillis();
+		String jsonRequest = userJSONObject.toString();
+		
+		HttpURLConnection conn = null;
+		OutputStream outStream = null;
+		try
+		{
+			conn = (HttpURLConnection)hiveServer.openConnection();
+			conn.setDoOutput(true);
+			conn.setFixedLengthStreamingMode(jsonRequest.length());
+			conn.setRequestProperty("Content-Type", "application/json");
+			
+			outStream = conn.getOutputStream();
+			outStream.write(jsonRequest.getBytes(Constants.US_ASCII));
+			outStream.flush();
+			outStream.close();
+			
+			if (conn.getResponseCode() != HttpURLConnection.HTTP_CREATED)
+				throw new IOException("Response code: " + conn.getResponseCode()
+						+ " - " + conn.getResponseMessage());
+			
+			log.info("Successfully registered with Hive geo server");
+		} catch (IOException e)	{
+			log.warn("Unable to contact Hive geo server", e);
+		} finally {
+			if (conn != null)
+				conn.disconnect();
+			if (outStream != null)
+				try { outStream.close(); } catch (IOException ignored) { }
+		}
 	}
 	
 	private void unregister() {
