@@ -10,8 +10,10 @@ import butterknife.OnClick;
 import com.hivewallet.androidclient.wallet_test.R;
 import com.squareup.picasso.Picasso;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.location.LocationManager;
 import android.net.Uri;
@@ -50,8 +52,10 @@ public class FindNearbyPrepActivity extends FragmentActivity implements LoaderCa
 			viaBluetoothCheckbox.setEnabled(false);
 		}
 		
+		int checkResult = this.checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+		boolean hasLocationPermission = checkResult == PackageManager.PERMISSION_GRANTED;
 		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		if (locationManager == null) {
+		if (locationManager == null || !hasLocationPermission) {
 			/* no GPS available */
 			viaServerCheckbox.setChecked(false);
 			viaServerCheckbox.setEnabled(false);
