@@ -11,6 +11,7 @@ import butterknife.InjectView;
 
 import com.google.bitcoin.core.Address;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
+import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet.util.FindNearbyContact;
 import com.hivewallet.androidclient.wallet.util.FindNearbyBluetoothWorker;
@@ -64,6 +65,7 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 	private Set<String> successfulCandidates = new HashSet<String>();
 
 	private ContentResolver contentResolver;
+	private Configuration configuration;
 	private Handler handler;
 	private FindNearbyBluetoothWorker findNearbyBluetoothWorker = null;
 	private FindNearbyGPSWorker findNearbyGPSWorker = null;
@@ -106,6 +108,7 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 		contentResolver = getContentResolver();
 		
 		application = (WalletApplication)getApplication();
+		configuration = application.getConfiguration();
 		bitcoinAddress = application.determineSelectedAddress();
 		
 		bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -162,7 +165,7 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
         
 	        // setup worker
 	        if (findNearbyBluetoothWorker == null) {
-	        	findNearbyBluetoothWorker = new FindNearbyBluetoothWorker(application, bluetoothAdapter, contentResolver, handler, bitcoinAddress.toString());
+	        	findNearbyBluetoothWorker = new FindNearbyBluetoothWorker(application, bluetoothAdapter, contentResolver, configuration, handler, bitcoinAddress.toString());
 				findNearbyBluetoothWorker.start();
 	        }
 				
@@ -172,7 +175,7 @@ public class FindNearbyActivity extends FragmentActivity implements Callback
 		
 		if (useServer) {
 			if (findNearbyGPSWorker == null) {
-				findNearbyGPSWorker = new FindNearbyGPSWorker(application, handler, bitcoinAddress.toString());
+				findNearbyGPSWorker = new FindNearbyGPSWorker(application, configuration, handler, bitcoinAddress.toString());
 				findNearbyGPSWorker.start();
 			}
 		}

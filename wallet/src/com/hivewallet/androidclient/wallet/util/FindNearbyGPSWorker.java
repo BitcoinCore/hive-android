@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.Constants;
 
 import android.content.Context;
@@ -44,6 +45,7 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 	private static final int BUFFER_SIZE = 4096;
 	
 	private final Context context;
+	private final Configuration configuration;
 	private final Handler parentHandler;
 	private final CookieManager cookieManager;
 	private final URL hiveServer;
@@ -57,9 +59,10 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 	private Location currentBestLocation = null;
 	private long lastActivityTimestamp = 0;
 	
-	public FindNearbyGPSWorker(Context context, Handler parentHandler, String bitcoinAddress)
+	public FindNearbyGPSWorker(Context context, Configuration configuration, Handler parentHandler, String bitcoinAddress)
 	{
 		this.context = context;
+		this.configuration = configuration;
 		this.parentHandler = parentHandler;
 		this.bitcoinAddress = bitcoinAddress;
 		
@@ -77,7 +80,7 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 		Looper.prepare();
 		handler = new Handler();
 		
-		userRecord = FindNearbyContact.lookupUserRecord(context.getContentResolver(), bitcoinAddress);
+		userRecord = FindNearbyContact.lookupUserRecord(context.getContentResolver(), configuration, bitcoinAddress);
 		if (userRecord == null) {
 			log.warn("Unable to lookup user details in preparation of Hive geo server search - GPS worker is shutting down.");
 			return;

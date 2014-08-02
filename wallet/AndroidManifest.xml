@@ -22,7 +22,6 @@
 	<uses-permission android:name="android.permission.BLUETOOTH" />
 	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 	<uses-permission android:name="android.permission.READ_CONTACTS" />
-	<uses-permission android:name="android.permission.READ_PROFILE" />
 
 	<uses-feature
 		android:name="android.hardware.touchscreen"
@@ -199,12 +198,12 @@
 			android:configChanges="orientation"
 			android:screenOrientation="portrait"
 			android:label="@string/find_nearby"
-			android:noHistory="true" />						
+			android:windowSoftInputMode="stateAlwaysHidden" />
 		<activity
 			android:name="com.hivewallet.androidclient.wallet.ui.FindNearbyActivity"
 			android:configChanges="orientation"
 			android:screenOrientation="portrait"
-			android:label="@string/find_nearby" />						
+			android:label="@string/find_nearby" />
 
 		<provider
 			android:name="com.hivewallet.androidclient.wallet.AddressBookProvider"

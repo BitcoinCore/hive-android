@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.net.Uri;
 import android.text.format.DateUtils;
 
 import com.google.common.base.Joiner;
@@ -65,6 +67,9 @@ public class Configuration
 
 	private static final int PREFS_DEFAULT_BTC_SHIFT = 3;
 	private static final int PREFS_DEFAULT_BTC_PRECISION = 2;
+	
+	private static final String PREFS_KEY_FIND_NEARBY_USER_PHOTO = "find_nearby_user_photo";
+	private static final String PREFS_KEY_FIND_NEARBY_USER_NAME = "find_nearby_user_name";
 
 	private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
@@ -290,6 +295,40 @@ public class Configuration
 		prefs.edit().putInt(PREFS_KEY_CHANGE_LOG_VERSION, currentVersionCode).commit();
 
 		return /* wasUsedBefore && */wasBelow && isNowAbove;
+	}
+	
+	public String getFindNearbyUserName()
+	{
+		return prefs.getString(PREFS_KEY_FIND_NEARBY_USER_NAME, "");
+	}
+	
+	public String getFindNearbyUserName(String defaultUserName)
+	{
+		return prefs.getString(PREFS_KEY_FIND_NEARBY_USER_NAME, defaultUserName);
+	}
+	
+	public void setFindNearbyUserName(@Nonnull String userName)
+	{
+		prefs.edit().putString(PREFS_KEY_FIND_NEARBY_USER_NAME, userName).commit();
+	}
+	
+	public Uri getFindNearbyUserPhoto()
+	{
+		Uri uri = null;
+		String uriStr = prefs.getString(PREFS_KEY_FIND_NEARBY_USER_PHOTO, null);
+		if (uriStr != null)
+			uri = Uri.parse(uriStr);
+		
+		return uri;
+	}
+	
+	public void setFindNearbyUserPhoto(@Nullable Uri userPhotoUri)
+	{
+		if (userPhotoUri != null) {
+			prefs.edit().putString(PREFS_KEY_FIND_NEARBY_USER_PHOTO, userPhotoUri.toString()).commit();
+		} else {
+			prefs.edit().remove(PREFS_KEY_FIND_NEARBY_USER_PHOTO).commit();
+		}
 	}
 
 	public void registerOnSharedPreferenceChangeListener(final OnSharedPreferenceChangeListener listener)

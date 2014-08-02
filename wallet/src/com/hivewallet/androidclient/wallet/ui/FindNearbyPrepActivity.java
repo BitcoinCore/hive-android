@@ -1,42 +1,42 @@
 package com.hivewallet.androidclient.wallet.ui;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
+import butterknife.OnTextChanged;
 
+import com.hivewallet.androidclient.wallet.Configuration;
+import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet_test.R;
 import com.squareup.picasso.Picasso;
 
 import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.provider.ContactsContract.Contacts;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
-import android.view.View;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 
-public class FindNearbyPrepActivity extends FragmentActivity implements LoaderCallbacks<Cursor>
+public class FindNearbyPrepActivity extends FragmentActivity
 {
-	private SimpleCursorAdapter userSimpleCursorAdapter;
+	private static final int REQUEST_CODE_PICK_PHOTO = 0;
+	
+	private Configuration configuration;
 	
 	@InjectView(R.id.cb_via_bluetooth) CheckBox viaBluetoothCheckbox;
 	@InjectView(R.id.cb_via_server) CheckBox viaServerCheckbox;
-	@InjectView(R.id.lv_user) ListView userListView;
+	@InjectView(R.id.iv_user_photo) ImageView userPhotoImageView;
+	@InjectView(R.id.et_user_name) EditText userNameEditText;
+	
+	private String userName = null;
+	private Uri userPhotoUri = null;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -61,84 +61,75 @@ public class FindNearbyPrepActivity extends FragmentActivity implements LoaderCa
 			viaServerCheckbox.setEnabled(false);
 		}
 		
-		setupUserListView();
+		WalletApplication application = (WalletApplication)getApplication();
+		configuration = application.getConfiguration();
+		loadUserProfile();
+		saveUserName();	// write back default name if we are initializing
+		updateView();
 	}
 	
-	private void setupUserListView()
-	{
-		final String[] from_columns = { Contacts.PHOTO_URI
-				  				      , Contacts.DISPLAY_NAME
-				  					  };
-		final int[] to_ids = { R.id.iv_user_photo, R.id.tv_user_name };
-		userSimpleCursorAdapter= new SimpleCursorAdapter(
-				this
-				, R.layout.find_nearby_user_list_item
-				, null
-				, from_columns
-				, to_ids
-				, 0
-				);
-
-		userSimpleCursorAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder()
-		{
-			public boolean setViewValue(View view, Cursor cursor, int columnIndex)
-			{
-				switch (view.getId()) {
-					case R.id.iv_user_photo:
-						return setUserPhoto((ImageView)view, cursor, columnIndex);
-					default:
-						return false;
-				}
-			}
-
-			private boolean setUserPhoto(ImageView imageView, Cursor cursor, int columnIndex)
-			{
-				String photo = cursor.getString(columnIndex);
-				Uri uri = null;
-				if (photo != null)
-					uri = Uri.parse(photo);
-
-				Picasso.with(FindNearbyPrepActivity.this)
-				.load(uri)
-				.placeholder(R.drawable.ic_contact_picture)
-				.into(imageView);
-
-				return true;
-			}
-		});
+	private void loadUserProfile() {
+		String defaultUserName = getResources().getString(R.string.find_nearby_default_user_name);
+		userName = configuration.getFindNearbyUserName(defaultUserName);
+		userPhotoUri = configuration.getFindNearbyUserPhoto();
+	}
+	
+	private void saveUserPhoto() {
+		configuration.setFindNearbyUserPhoto(userPhotoUri);
+	}
+	
+	private void saveUserName() {
+		configuration.setFindNearbyUserName(userName);
+	}
+	
+	private void updateView() {
+		Picasso
+			.with(this)
+			.load(userPhotoUri)
+			.placeholder(R.drawable.ic_contact_picture)
+			.into(userPhotoImageView);
 		
-		userListView.setAdapter(userSimpleCursorAdapter);
-		
-		getSupportLoaderManager().initLoader(0, null, this);
+		String displayedUserName = userNameEditText.getText().toString();
+		if (!userName.equals(displayedUserName)) {
+			userNameEditText.setText(userName);
+			userNameEditText.setSelection(userName.length());
+		}
 	}
 	
 	@OnClick(R.id.b_start) void start() {
 		FindNearbyActivity.start(this, viaBluetoothCheckbox.isChecked(), viaServerCheckbox.isChecked());
+		finish();
+	}
+	
+	@OnClick(R.id.iv_user_photo) void handlePickPhoto() {
+		if (userPhotoUri == null) {
+			Intent imageIntent = new Intent();
+			imageIntent.setType("image/*");
+			imageIntent.setAction(Intent.ACTION_GET_CONTENT);
+			
+			Intent choiceIntent = Intent.createChooser(imageIntent,
+					getString(R.string.find_nearby_user_photo_selection));
+			
+			startActivityForResult(choiceIntent, REQUEST_CODE_PICK_PHOTO);
+		} else {
+			userPhotoUri = null;
+			saveUserPhoto();
+			updateView();
+		}
+	}
+	
+	@OnTextChanged(value = R.id.et_user_name) void handleUserNameChange() {
+		userName = userNameEditText.getText().toString();
+		saveUserName();
 	}
 	
 	@Override
-	public Loader<Cursor> onCreateLoader(int loaderId, Bundle args)
+	public void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
-		CursorLoader loader = new CursorLoader
-				( this
-				, ContactsContract.Profile.CONTENT_URI
-				, null
-				, null
-				, null
-				, null
-				);
-		return loader; 
-	}
-
-	@Override
-	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)
-	{
-		userSimpleCursorAdapter.swapCursor(cursor);
-	}
-
-	@Override
-	public void onLoaderReset(Loader<Cursor> arg0)
-	{
-		userSimpleCursorAdapter.swapCursor(null);
+		if (requestCode == REQUEST_CODE_PICK_PHOTO && resultCode == Activity.RESULT_OK) {
+			userPhotoUri = data.getData();
+			saveUserPhoto();
+			updateView();
+		}
 	}	
 }

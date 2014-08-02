@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hivewallet.androidclient.wallet.Configuration;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -54,6 +55,7 @@ public class FindNearbyBluetoothWorker extends Thread
 	private final Context context;
 	private final BluetoothAdapter bluetoothAdapter;
 	private final ContentResolver contentResolver;
+	private final Configuration configuration;
 	private final Handler handler;
 	
 	private ServerThread serverThread = null;
@@ -63,11 +65,12 @@ public class FindNearbyBluetoothWorker extends Thread
 	private FindNearbyContact userRecord = null;
 	private String bitcoinAddress;
 	
-	public FindNearbyBluetoothWorker(Context context, BluetoothAdapter bluetoothAdapter, ContentResolver contentResolver, Handler handler, String bitcoinAddress)
+	public FindNearbyBluetoothWorker(Context context, BluetoothAdapter bluetoothAdapter, ContentResolver contentResolver, Configuration configuration, Handler handler, String bitcoinAddress)
 	{
 		this.context = context;
 		this.bluetoothAdapter = bluetoothAdapter;
 		this.contentResolver = contentResolver;
+		this.configuration = configuration;
 		this.handler = handler;
 		this.bitcoinAddress = bitcoinAddress;
 	}
@@ -245,7 +248,7 @@ public class FindNearbyBluetoothWorker extends Thread
 		public void run()
 		{
 			if (userRecord == null)
-				userRecord = FindNearbyContact.lookupUserRecord(contentResolver, bitcoinAddress);
+				userRecord = FindNearbyContact.lookupUserRecord(contentResolver, configuration, bitcoinAddress);
 			
 			if (userRecord == null) { /* still no user record? abort */
 				log.warn("Unable to lookup user details for broadcasting.");

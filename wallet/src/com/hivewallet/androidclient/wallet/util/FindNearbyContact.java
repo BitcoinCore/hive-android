@@ -21,18 +21,16 @@ import org.slf4j.LoggerFactory;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
-import android.provider.ContactsContract;
-import android.provider.ContactsContract.Contacts;
 import android.provider.MediaStore;
 import android.util.Base64;
 
 import com.google.protobuf.ByteString;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
+import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.Protos.Contact;
 import com.hivewallet.androidclient.wallet.Protos.Contact.Builder;
@@ -229,47 +227,30 @@ public class FindNearbyContact {
 		return new FindNearbyContact(bitcoinAddress, name, photo);
 	}
 	
-	public static FindNearbyContact lookupUserRecord(ContentResolver contentResolver, String bitcoinAddress)
+	public static FindNearbyContact lookupUserRecord(ContentResolver contentResolver, Configuration configuration, String bitcoinAddress)
 	{
 		FindNearbyContact record = null;
-		final String[] projection = { Contacts.PHOTO_URI, Contacts.DISPLAY_NAME };
-		Cursor cursor = contentResolver.query
-				( ContactsContract.Profile.CONTENT_URI
-				, projection
-				, null
-				, null
-				, null
-				);
+		String name = configuration.getFindNearbyUserName();
+		Uri photoUri = configuration.getFindNearbyUserPhoto();
 		
-		if (cursor.moveToNext()) {
-			String name = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.DISPLAY_NAME));
-			String photoUriStr = cursor.getString(cursor.getColumnIndexOrThrow(Contacts.PHOTO_URI));
-			
-			Uri photoUri = null;
-			if (photoUriStr != null)
-				photoUri = Uri.parse(photoUriStr);
-	
-			byte[] photo = null;
-			if (photoUri != null) {
-				try
-				{
-					Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, photoUri);
-					Bitmap scaledBitmap = AddressBookProvider.ensureReasonableSize(bitmap);
-					if (scaledBitmap == null)
-						throw new IOException();
-					
-					ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-					scaledBitmap.compress(CompressFormat.PNG, 100, outStream);
-					photo = outStream.toByteArray();
-				}
-				catch (FileNotFoundException ignored) {}
-				catch (IOException ignored) {}
+		byte[] photo = null;
+		if (photoUri != null) {
+			try
+			{
+				Bitmap bitmap = MediaStore.Images.Media.getBitmap(contentResolver, photoUri);
+				Bitmap scaledBitmap = AddressBookProvider.ensureReasonableSize(bitmap);
+				if (scaledBitmap == null)
+					throw new IOException();
+				
+				ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+				scaledBitmap.compress(CompressFormat.PNG, 100, outStream);
+				photo = outStream.toByteArray();
 			}
-			
-			record = new FindNearbyContact(bitcoinAddress, name, photo);
+			catch (FileNotFoundException ignored) {}
+			catch (IOException ignored) {}
 		}
 		
-		cursor.close();
+		record = new FindNearbyContact(bitcoinAddress, name, photo);
 		return record;
 	}	
 }

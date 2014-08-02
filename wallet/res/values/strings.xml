@@ -310,5 +310,6 @@
 	<string name="searching_via_bluetooth">Searching via Bluetooth...</string>
 	<string name="find_nearby_connecting">Trying to talk to device \"%s\"...</string>
 	<string name="searching_via_server">Searching via Hive server...</string>
-
+	<string name="find_nearby_user_photo_selection">Select photo</string>
+	<string name="find_nearby_default_user_name">Hive user</string>
 </resources>
