@@ -24,11 +24,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
-import com.hivewallet.androidclient.wallet.util.PhoneContactsLookupToolkit;
 import com.hivewallet.androidclient.wallet.util.GenericUtils.BitmapSize;
 
 import android.content.ContentProvider;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -358,12 +356,9 @@ public class AddressBookProvider extends ContentProvider
 		
 		private static final long ABOUT_A_DAY = 24 * 60 * 60 * 1000; /* in milliseconds */
 		
-		private ContentResolver contentResolver;
-
 		public Helper(final Context context)
 		{
 			super(context, DATABASE_NAME, null, DATABASE_VERSION);
-			this.contentResolver = context.getContentResolver();
 		}
 
 		@Override
@@ -402,22 +397,7 @@ public class AddressBookProvider extends ContentProvider
 			}
 			else if (oldVersion == 2)
 			{
-				List<String> labels = new ArrayList<String>();
-				Cursor cursor = db.query(DATABASE_TABLE, new String [] { KEY_LABEL }, null, null, null, null, null);
-				while (cursor.moveToNext()) {
-					labels.add(cursor.getString(cursor.getColumnIndexOrThrow(KEY_LABEL)));
-				}
-				cursor.close();
-				
-				for (String label : labels) {
-					Uri uri = PhoneContactsLookupToolkit.lookupPhoneContactPicture(contentResolver, label);
-					if (uri != null) {
-						ContentValues values = new ContentValues();
-						values.put(KEY_PHOTO, uri.toString());
-						
-						db.update(DATABASE_NAME, values, KEY_LABEL + " = ?", new String[] { label });
-					}
-				}
+				/* nothing to to */
 			}
 			else if (oldVersion == 3)
 			{
