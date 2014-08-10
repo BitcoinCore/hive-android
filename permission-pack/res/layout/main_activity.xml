@@ -1,12 +1,9 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:tools="http://schemas.android.com/tools"
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="match_parent"
-	android:layout_height="match_parent"
-	tools:context="${packageName}.${activityClass}" >
-
-	<TextView
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="@string/hello_world" />
-
-</RelativeLayout>
+	android:layout_height="wrap_content"
+	android:drawablePadding="32dp"
+	android:drawableTop="@drawable/app_icon"
+	android:gravity="center"
+	android:padding="32dp"
+	android:text="@string/message"
+	android:textSize="20sp" />

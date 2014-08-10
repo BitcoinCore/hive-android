@@ -2,6 +2,6 @@
 <resources>
 
 	<string name="app_name">Hive Permission Pack</string>
-	<string name="hello_world">Hello world!</string>
+	<string name="message">Hive Permission Pack is enabled. You can remove the launcher icon for the permission pack, if you like. As long as the permission pack is simply installed, Hive Bitcoin Wallet will have additional features.</string>
 
 </resources>
