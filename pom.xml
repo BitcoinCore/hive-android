@@ -14,6 +14,7 @@
 		<module>wallet</module>
 		<module>integration-android</module>
 		<module>sample-integration-android</module>
+		<module>permission-pack</module>
 	</modules>
 
 	<build>
