@@ -18,16 +18,20 @@ import org.slf4j.LoggerFactory;
 import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.Constants;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Bundle;
 import android.os.Handler;
+import android.os.Handler.Callback;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 
-public class FindNearbyGPSWorker extends Thread implements LocationListener
+public class FindNearbyGPSWorker extends Thread implements Callback
 {
 	private static final Logger log = LoggerFactory.getLogger(FindNearbyGPSWorker.class);
 	
@@ -40,8 +44,6 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 	private static final String JSON_FIELD_LONGITUDE = "lon";
 	private static final String BITCOIN_NETWORK = "bitcoin";
 	private static final int SEARCH_INTERVAL = 8 * 1000;
-	private static final int LOCATION_INTERVAL = 300;
-	private static final int TWO_MINUTES = 2 * 60 * 1000;
 	private static final int BUFFER_SIZE = 4096;
 	
 	private final Context context;
@@ -55,9 +57,12 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 	private FindNearbyContact userRecord;
 	private String bitcoinAddress;
 	
-	private LocationManager locationManager;
 	private Location currentBestLocation = null;
 	private long lastActivityTimestamp = 0;
+	
+	private Messenger myMessenger;
+	private Messenger serviceMessenger;
+	private boolean isServiceBound = false;
 	
 	public FindNearbyGPSWorker(Context context, Configuration configuration, Handler parentHandler, String bitcoinAddress)
 	{
@@ -78,7 +83,8 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 	public void run()
 	{
 		Looper.prepare();
-		handler = new Handler();
+		handler = new Handler(this);
+		myMessenger = new Messenger(handler);
 		
 		userRecord = FindNearbyContact.lookupUserRecord(context.getContentResolver(), configuration, bitcoinAddress);
 		if (userRecord == null) {
@@ -86,28 +92,54 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 			return;
 		}
 		
-		locationManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
-		if (locationManager == null) {
-			log.warn("Location manager not available - GPS worker is shutting down.");
-			return;
-		}
-		
-		boolean hasAtLeastOneProvider = false;
-		try {
-			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, 0, this);
-			hasAtLeastOneProvider = true;
-		} catch (IllegalArgumentException discarded) {}
-		try {
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, 0, this);
-			hasAtLeastOneProvider = true;
-		} catch (IllegalArgumentException discarded) {}
-		
-		if (!hasAtLeastOneProvider) {
-			log.warn("Location manager has no suitable providers - GPS worker is shutting down.");
-			return;
-		}
+		Intent intent = new Intent(context, LocationService.class); 
+		context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 		
 		Looper.loop();
+	}
+
+	private ServiceConnection serviceConnection = new ServiceConnection()
+	{
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service)
+		{
+			isServiceBound = true;
+			serviceMessenger = new Messenger(service);
+			
+			try {
+				Message msg = Message.obtain(null, LocationService.MSG_START);
+				msg.replyTo = myMessenger;
+				serviceMessenger.send(msg);
+			} catch (RemoteException e) {
+				log.warn("Communication error with LocationService ({}) - GPS worker is shutting down.", e);
+			}
+		}
+		
+		@Override
+		public void onServiceDisconnected(ComponentName name)
+		{
+			isServiceBound = false;
+			serviceMessenger = null;
+		}
+	};
+	
+	@Override
+	public boolean handleMessage(Message msg)
+	{
+		switch (msg.what) {
+			case LocationService.MSG_STATUS:
+				if (msg.arg1 == 0) {
+					String error = (String)msg.obj;
+					log.warn("LocationService not available ({}) - GPS worker is shutting down.", error);
+				}
+				return true;
+			case LocationService.MSG_LOCATION:
+				currentBestLocation = (Location)msg.obj;
+				registerAndSearch();
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	private Runnable shutdownRunnable = new Runnable()
@@ -115,8 +147,8 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 		@Override
 		public void run()
 		{
-			if (locationManager != null)
-				locationManager.removeUpdates(FindNearbyGPSWorker.this);
+			if (isServiceBound)
+				context.unbindService(serviceConnection);
 			unregister();
 			handler.getLooper().quit(); 
 		}
@@ -305,87 +337,5 @@ public class FindNearbyGPSWorker extends Thread implements LocationListener
 		Message msg = parentHandler.obtainMessage(MESSAGE_INFO_RECEIVED);
 		msg.obj = contact;
 		parentHandler.sendMessage(msg);
-	}	
-
-	@Override
-	public void onLocationChanged(Location location)
-	{
-		if (isBetterLocation(location, currentBestLocation))
-			currentBestLocation = location;
-		
-		registerAndSearch();
-	}
-
-	@Override
-	public void onStatusChanged(String provider, int status, Bundle extras)
-	{
-		/* do nothing */
-	}
-
-	@Override
-	public void onProviderEnabled(String provider)
-	{
-		/* do nothing */
-	}
-
-	@Override
-	public void onProviderDisabled(String provider)
-	{
-		/* do nothing */
-	}
-	
-	
-	/** Determines whether one Location reading is better than the current Location fix
-	  * @param location  The new Location that you want to evaluate
-	  * @param currentBestLocation  The current Location fix, to which you want to compare the new one
-	  */
-	private static boolean isBetterLocation(Location location, Location currentBestLocation) {
-	    if (currentBestLocation == null) {
-	        // A new location is always better than no location
-	        return true;
-	    }
-
-	    // Check whether the new location fix is newer or older
-	    long timeDelta = location.getTime() - currentBestLocation.getTime();
-	    boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
-	    boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
-	    boolean isNewer = timeDelta > 0;
-
-	    // If it's been more than two minutes since the current location, use the new location
-	    // because the user has likely moved
-	    if (isSignificantlyNewer) {
-	        return true;
-	    // If the new location is more than two minutes older, it must be worse
-	    } else if (isSignificantlyOlder) {
-	        return false;
-	    }
-
-	    // Check whether the new location fix is more or less accurate
-	    int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
-	    boolean isLessAccurate = accuracyDelta > 0;
-	    boolean isMoreAccurate = accuracyDelta < 0;
-	    boolean isSignificantlyLessAccurate = accuracyDelta > 200;
-
-	    // Check if the old and new location are from the same provider
-	    boolean isFromSameProvider = isSameProvider(location.getProvider(),
-	            currentBestLocation.getProvider());
-
-	    // Determine location quality using a combination of timeliness and accuracy
-	    if (isMoreAccurate) {
-	        return true;
-	    } else if (isNewer && !isLessAccurate) {
-	        return true;
-	    } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
-	        return true;
-	    }
-	    return false;
-	}
-
-	/** Checks whether two providers are the same */
-	private static boolean isSameProvider(String provider1, String provider2) {
-	    if (provider1 == null) {
-	      return provider2 == null;
-	    }
-	    return provider1.equals(provider2);
 	}	
 }

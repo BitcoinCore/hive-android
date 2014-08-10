@@ -21,6 +21,7 @@
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 	<uses-permission android:name="android.permission.BLUETOOTH" />
 	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
 	<uses-feature
 		android:name="android.hardware.touchscreen"
@@ -232,6 +233,9 @@
 			android:exported="false" />
 		<service
 			android:name="com.hivewallet.androidclient.wallet.offline.AcceptBluetoothService"
+			android:exported="false" />
+		<service
+			android:name="com.hivewallet.androidclient.wallet.util.LocationService"
 			android:exported="false" />
 
 		<receiver android:name="com.hivewallet.androidclient.wallet.service.AutosyncReceiver" >
