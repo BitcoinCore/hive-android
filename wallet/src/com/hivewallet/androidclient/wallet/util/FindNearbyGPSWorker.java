@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.hivewallet.androidclient.permissionpack.LocationService;
 import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.Constants;
 
@@ -25,6 +26,7 @@ import android.content.ServiceConnection;
 import android.location.Location;
 import android.os.Handler;
 import android.os.Handler.Callback;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
@@ -92,7 +94,7 @@ public class FindNearbyGPSWorker extends Thread implements Callback
 			return;
 		}
 		
-		Intent intent = new Intent(context, LocationService.class); 
+		Intent intent = new Intent(LocationService.ACTION_START); 
 		context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 		
 		Looper.loop();
@@ -128,8 +130,10 @@ public class FindNearbyGPSWorker extends Thread implements Callback
 	{
 		switch (msg.what) {
 			case LocationService.MSG_STATUS:
-				if (msg.arg1 == 0) {
-					String error = (String)msg.obj;
+				Bundle statusBundle = (Bundle)msg.obj;
+				
+				if (statusBundle.getBoolean(LocationService.KEY_IS_AVAILABLE, false)) {
+					String error = statusBundle.getString(LocationService.KEY_ERROR, "Error message unavailable");
 					log.warn("LocationService not available ({}) - GPS worker is shutting down.", error);
 				}
 				return true;

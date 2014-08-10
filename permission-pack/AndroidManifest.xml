@@ -8,6 +8,12 @@
 		android:minSdkVersion="14"
 		android:targetSdkVersion="19" />
 
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+	<permission
+		android:name="com.hivewallet.androidclient.permissionpack.permission.ACCESS_FINE_LOCATION"
+		android:protectionLevel="signature" />
+
 	<application
 		android:allowBackup="true"
 		android:icon="@drawable/app_icon"
@@ -22,6 +28,15 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+
+		<service
+			android:name="com.hivewallet.androidclient.permissionpack.LocationService"
+			android:exported="true"
+			android:permission="com.hivewallet.androidclient.permissionpack.permission.ACCESS_FINE_LOCATION" >
+			<intent-filter>
+				<action android:name="com.hivewallet.androidclient.permissionpack.LocationService.action.START" />
+			</intent-filter>
+		</service>
 	</application>
 
 </manifest>

@@ -5,18 +5,16 @@ import butterknife.InjectView;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
 
+import com.hivewallet.androidclient.permissionpack.LocationService;
 import com.hivewallet.androidclient.wallet.Configuration;
 import com.hivewallet.androidclient.wallet.WalletApplication;
 import com.hivewallet.androidclient.wallet_test.R;
 import com.squareup.picasso.Picasso;
 
-import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -52,10 +50,7 @@ public class FindNearbyPrepActivity extends FragmentActivity
 			viaBluetoothCheckbox.setEnabled(false);
 		}
 		
-		int checkResult = this.checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
-		boolean hasLocationPermission = checkResult == PackageManager.PERMISSION_GRANTED;
-		LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		if (locationManager == null || !hasLocationPermission) {
+		if (!locationServiceAvailable()) {
 			/* no GPS available */
 			viaServerCheckbox.setChecked(false);
 			viaServerCheckbox.setEnabled(false);
@@ -66,6 +61,16 @@ public class FindNearbyPrepActivity extends FragmentActivity
 		loadUserProfile();
 		saveUserName();	// write back default name if we are initializing
 		updateView();
+	}
+	
+	private boolean locationServiceAvailable() {
+		PackageManager pm = getPackageManager();
+		try {
+			pm.getPackageInfo(LocationService.PACKAGE_NAME, PackageManager.GET_SERVICES);
+			return true;
+		} catch (PackageManager.NameNotFoundException e) {
+			return false;
+		}
 	}
 	
 	private void loadUserProfile() {

@@ -89,6 +89,13 @@
 			<version>2.0</version>
 		</dependency>
 
+		<!-- com.hivewallet.androidclient.permissionpack.* -->
+		<dependency>
+			<groupId>com.hivewallet.androidclient.wallet</groupId>
+			<artifactId>permission-pack</artifactId>
+			<version>0.1</version>
+		</dependency>
+
 		<!-- com.google.protobuf.* -->
 		<dependency>
 			<groupId>com.google.protobuf</groupId>

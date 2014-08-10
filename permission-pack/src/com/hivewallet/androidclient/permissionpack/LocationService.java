@@ -1,6 +1,4 @@
-package com.hivewallet.androidclient.wallet.util;
-
-import javax.annotation.Nullable;
+package com.hivewallet.androidclient.permissionpack;
 
 import android.app.Service;
 import android.content.Context;
@@ -18,6 +16,11 @@ import android.os.RemoteException;
 
 public class LocationService extends Service implements Callback
 {
+	public static final String PACKAGE_NAME = "com.hivewallet.androidclient.permissionpack";
+	public static final String ACTION_START = "com.hivewallet.androidclient.permissionpack.LocationService.action.START";
+	public static final String KEY_IS_AVAILABLE = "is_available";
+	public static final String KEY_ERROR = "error";
+	
 	public static final int MSG_START = 0;
 	public static final int MSG_STATUS = 1;
 	public static final int MSG_LOCATION = 2;
@@ -64,9 +67,13 @@ public class LocationService extends Service implements Callback
 				case MSG_START:
 					theirMessenger = msg.replyTo;
 					LocationServiceStatus status = initLocationManager();
+					Bundle statusBundle = new Bundle();
+					
+					statusBundle.putBoolean(KEY_IS_AVAILABLE, status.isAvailable());
+					statusBundle.putString(KEY_ERROR, status.isAvailable() ? "" : status.getError());
+					
 					Message reply = Message.obtain(null, MSG_STATUS);
-					reply.arg1 = status.isAvailable() ? 1 : 0;
-					reply.obj = status.isAvailable() ? "" : status.getError();
+					reply.obj = statusBundle;
 					theirMessenger.send(reply);
 					return true;
 				default:
@@ -194,7 +201,7 @@ public class LocationService extends Service implements Callback
 		private boolean isAvailable;
 		private String error;
 		
-		private LocationServiceStatus(boolean isAvailable, @Nullable String error)
+		private LocationServiceStatus(boolean isAvailable, String error)
 		{
 			this.isAvailable = isAvailable;
 			this.error = error;
