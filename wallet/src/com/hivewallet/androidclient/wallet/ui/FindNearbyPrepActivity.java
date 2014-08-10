@@ -18,9 +18,12 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.text.Html;
+import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 public class FindNearbyPrepActivity extends FragmentActivity
 {
@@ -32,6 +35,7 @@ public class FindNearbyPrepActivity extends FragmentActivity
 	@InjectView(R.id.cb_via_server) CheckBox viaServerCheckbox;
 	@InjectView(R.id.iv_user_photo) ImageView userPhotoImageView;
 	@InjectView(R.id.et_user_name) EditText userNameEditText;
+	@InjectView(R.id.tv_permission_pack) TextView permissionPackTextView;
 	
 	private String userName = null;
 	private Uri userPhotoUri = null;
@@ -44,26 +48,38 @@ public class FindNearbyPrepActivity extends FragmentActivity
 		setContentView(R.layout.find_nearby_prep_activity);
 		ButterKnife.inject(this);
 		
-		if (BluetoothAdapter.getDefaultAdapter() == null) {
-			/* no Bluetooth available */
-			viaBluetoothCheckbox.setChecked(false);
-			viaBluetoothCheckbox.setEnabled(false);
-		}
-		
-		if (!locationServiceAvailable()) {
-			/* no GPS available */
-			viaServerCheckbox.setChecked(false);
-			viaServerCheckbox.setEnabled(false);
-		}
-		
 		WalletApplication application = (WalletApplication)getApplication();
 		configuration = application.getConfiguration();
 		loadUserProfile();
 		saveUserName();	// write back default name if we are initializing
+		
 		updateView();
 	}
 	
-	private boolean locationServiceAvailable() {
+	@Override
+	protected void onResume()
+	{
+		super.onResume();
+		
+		if (BluetoothAdapter.getDefaultAdapter() != null) {
+			viaBluetoothCheckbox.setEnabled(true);
+		} else {
+			viaBluetoothCheckbox.setChecked(false);
+			viaBluetoothCheckbox.setEnabled(false);
+		}
+		
+		if (isLocationServiceAvailable()) {
+			viaServerCheckbox.setEnabled(true);
+			permissionPackTextView.setVisibility(View.GONE);
+		} else {
+			viaServerCheckbox.setChecked(false);
+			viaServerCheckbox.setEnabled(false);
+			permissionPackTextView.setText(Html.fromHtml(getString(R.string.find_nearby_permission_pack)));
+			permissionPackTextView.setVisibility(View.VISIBLE);
+		}
+	}
+	
+	private boolean isLocationServiceAvailable() {
 		PackageManager pm = getPackageManager();
 		try {
 			pm.getPackageInfo(LocationService.PACKAGE_NAME, PackageManager.GET_SERVICES);
@@ -104,6 +120,12 @@ public class FindNearbyPrepActivity extends FragmentActivity
 	@OnClick(R.id.b_start) void start() {
 		FindNearbyActivity.start(this, viaBluetoothCheckbox.isChecked(), viaServerCheckbox.isChecked());
 		finish();
+	}
+	
+	@OnClick(R.id.tv_permission_pack) void handlePermissionPackHint() {
+		Intent intent = new Intent(Intent.ACTION_VIEW);
+		intent.setData(Uri.parse("market://details?id=" + LocationService.PACKAGE_NAME));
+		startActivity(intent);
 	}
 	
 	@OnClick(R.id.iv_user_photo) void handlePickPhoto() {

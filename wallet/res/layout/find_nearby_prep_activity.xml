@@ -97,6 +97,17 @@
 				android:text="@string/search_via_hive_server"
 				android:textSize="@dimen/font_size_normal" />
 		</LinearLayout>
+
+		<TextView
+			android:id="@+id/tv_permission_pack"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:gravity="center"
+			android:paddingLeft="32dp"
+			android:paddingRight="32dp"
+			android:paddingTop="16dp"
+			android:textSize="@dimen/font_size_normal"
+			android:visibility="gone" />
 	</LinearLayout>
 
 </ScrollView>
