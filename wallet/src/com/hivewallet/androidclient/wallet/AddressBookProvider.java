@@ -17,11 +17,20 @@
 
 package com.hivewallet.androidclient.wallet;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hivewallet.androidclient.wallet.util.GenericUtils;
 import com.hivewallet.androidclient.wallet.util.GenericUtils.BitmapSize;
@@ -34,6 +43,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -42,6 +52,8 @@ import android.os.Bundle;
  */
 public class AddressBookProvider extends ContentProvider
 {
+	private static final Logger log = LoggerFactory.getLogger(AddressBookProvider.class);
+	
 	private static final String DATABASE_TABLE = "address_book";
 
 	public static final String KEY_ROWID = "_id";
@@ -136,6 +148,48 @@ public class AddressBookProvider extends ContentProvider
 				bitmap.getWidth(), bitmap.getHeight(), REASONABLE_BITMAP_SIZE);
 		
 		return Bitmap.createScaledBitmap(bitmap, newSize.getWidth(), newSize.getHeight(), false);
+	}
+	
+	/**
+	 * Resizes the provided bitmap and stores it in private storage, returning a URI to it.
+	 * It will be deleted on the next clean up cycle, unless marked as permanent in the mean time.  */
+	public static Uri storeBitmap(@Nonnull Context context, @Nonnull Bitmap bitmap) {
+		if (bitmap == null)
+			return null;
+		
+		Bitmap bitmapScaled = ensureReasonableSize(bitmap);
+		if (bitmapScaled == null)
+			return null;
+		
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		bitmapScaled.compress(CompressFormat.PNG, 100, outStream);
+		byte[] photoScaled = outStream.toByteArray();
+		
+		Uri photoUri = null;
+		try {
+			/* for some reason calling DigestUtils.sha1Hex() does not work on Android */
+			String hash = new String(Hex.encodeHex(DigestUtils.sha1(photoScaled))); 
+			
+			/* create photo asset and database entry */
+			File dir = context.getDir(Constants.PHOTO_ASSETS_FOLDER, Context.MODE_PRIVATE);
+			File photoAsset = new File(dir, hash + ".png");
+			photoUri = Uri.fromFile(photoAsset);
+			boolean alreadyPresent = AddressBookProvider.insertOrUpdatePhotoUri(context, photoUri);
+			if (!alreadyPresent) {
+				FileUtils.writeByteArrayToFile(photoAsset, photoScaled);
+				log.info("Saved photo asset with uri {}", photoUri);
+			}
+			
+			/* use opportunity to clean up photo assets */
+			List<Uri> stalePhotoUris = AddressBookProvider.deleteStalePhotoAssets(context);
+			for (Uri stalePhotoUri : stalePhotoUris) {
+				File stalePhotoAsset = new File(stalePhotoUri.getPath());
+				FileUtils.deleteQuietly(stalePhotoAsset);
+				log.info("Deleting stale photo asset with uri {}", stalePhotoUri);
+			}
+		} catch (IOException ignored) {}
+		
+		return photoUri;
 	}
 
 	private Helper helper;

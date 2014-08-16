@@ -1,23 +1,16 @@
 package com.hivewallet.androidclient.wallet.util;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -31,13 +24,10 @@ import android.util.Base64;
 import com.google.protobuf.ByteString;
 import com.hivewallet.androidclient.wallet.AddressBookProvider;
 import com.hivewallet.androidclient.wallet.Configuration;
-import com.hivewallet.androidclient.wallet.Constants;
 import com.hivewallet.androidclient.wallet.Protos.Contact;
 import com.hivewallet.androidclient.wallet.Protos.Contact.Builder;
 
 public class FindNearbyContact {
-	private static final Logger log = LoggerFactory.getLogger(FindNearbyContact.class);
-	
 	private static final String JSON_FIELD_NAME = "name";
 	private static final String JSON_FIELD_BITCOIN_ADDRESS = "address";
 	private static final String JSON_FIELD_EMAIL = "email";
@@ -127,36 +117,7 @@ public class FindNearbyContact {
 		if (bitmapOriginal == null)
 			return;
 		
-		Bitmap bitmapScaled = AddressBookProvider.ensureReasonableSize(bitmapOriginal);
-		if (bitmapScaled == null)
-			return;
-		
-		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-		bitmapScaled.compress(CompressFormat.PNG, 100, outStream);
-		byte[] photoScaled = outStream.toByteArray();
-		
-		try {
-			/* for some reason calling DigestUtils.sha1Hex() does not work on Android */
-			String hash = new String(Hex.encodeHex(DigestUtils.sha1(photoScaled))); 
-			
-			/* create photo asset and database entry */
-			File dir = context.getDir(Constants.PHOTO_ASSETS_FOLDER, Context.MODE_PRIVATE);
-			File photoAsset = new File(dir, hash + ".png");
-			photoUri = Uri.fromFile(photoAsset);
-			boolean alreadyPresent = AddressBookProvider.insertOrUpdatePhotoUri(context, photoUri);
-			if (!alreadyPresent) {
-				FileUtils.writeByteArrayToFile(photoAsset, photoScaled);
-				log.info("Saved photo asset with uri {}", photoUri);
-			}
-			
-			/* use opportunity to clean up photo assets */
-			List<Uri> stalePhotoUris = AddressBookProvider.deleteStalePhotoAssets(context);
-			for (Uri stalePhotoUri : stalePhotoUris) {
-				File stalePhotoAsset = new File(stalePhotoUri.getPath());
-				FileUtils.deleteQuietly(stalePhotoAsset);
-				log.info("Deleting stale photo asset with uri {}", stalePhotoUri);
-			}
-		} catch (IOException ignored) {}
+		photoUri = AddressBookProvider.storeBitmap(context, bitmapOriginal);
 	}
 	
 	public boolean hasSameData(FindNearbyContact otherContact) {
