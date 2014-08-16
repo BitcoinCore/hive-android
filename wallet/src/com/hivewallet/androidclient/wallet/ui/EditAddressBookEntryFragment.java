@@ -17,6 +17,9 @@
 
 package com.hivewallet.androidclient.wallet.ui;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -26,8 +29,10 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
@@ -235,7 +240,19 @@ public final class EditAddressBookEntryFragment extends DialogFragment
 	public void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
 		if (requestCode == REQUEST_CODE_PICK_PHOTO && resultCode == Activity.RESULT_OK) {
-			photoUri = data.getData();
+			Uri uri = data.getData();
+			Bitmap bitmap = null;
+			try {
+				bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri);
+			} catch (FileNotFoundException ignored) {
+			} catch (IOException ignored) { 
+			}
+			
+			if (bitmap != null) {
+				photoUri = AddressBookProvider.storeBitmap(activity, bitmap);
+			} else {
+				photoUri = null;
+			}
 			updateImageView();
 		}
 	}

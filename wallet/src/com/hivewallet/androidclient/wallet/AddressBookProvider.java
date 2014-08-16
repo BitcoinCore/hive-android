@@ -67,6 +67,7 @@ public class AddressBookProvider extends ContentProvider
 	
 	private static final String METHOD_INSERT_OR_UPDATE_PHOTO_URI = "insert_or_update_photo_uri";
 	private static final String METHOD_DELETE_STALE_PHOTO_URIS = "delete_stale_photo_uris";
+	private static final String METHOD_SET_PHOTO_ASSET_AS_PERMANENT = "set_photo_asset_as_permanent";
 	private static final String PHOTO_URI_PRESENT = "photo_uri_present";
 	private static final String STALE_PHOTO_URIS = "stale_photo_uris";
 	
@@ -138,6 +139,17 @@ public class AddressBookProvider extends ContentProvider
 		}
 		
 		return photoUris;
+	}
+	
+	/** Mark photo asset as permanent to prevent it from being removed during a clean up cycle. */ 
+	public static void setPhotoAssetAsPermanent(final Context context, @Nullable final Uri photoUri)
+	{
+		if (photoUri == null)
+			return;
+		
+		final Uri uri = contentUri(context.getPackageName());
+		context.getContentResolver().call(
+				uri, METHOD_SET_PHOTO_ASSET_AS_PERMANENT, photoUri.toString(), null);
 	}
 	
 	public static Bitmap ensureReasonableSize(@Nullable Bitmap bitmap) {
@@ -331,6 +343,12 @@ public class AddressBookProvider extends ContentProvider
 			bundle.putStringArrayList(STALE_PHOTO_URIS, stalePhotoUris);
 			
 			return bundle;
+		} else if (method.equals(METHOD_SET_PHOTO_ASSET_AS_PERMANENT)) {
+			if (arg == null)
+				return null;
+			
+			helper.setPhotoAssetAsPermanent(arg, true);
+			return null;
 		} else {
 			throw new UnsupportedOperationException("Unknown method: " + method);
 		}
