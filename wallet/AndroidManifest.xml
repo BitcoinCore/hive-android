@@ -211,6 +211,15 @@
 			android:name="com.hivewallet.androidclient.wallet.ExchangeRatesProvider"
 			android:authorities="com.hivewallet.androidclient.wallet_test.exchange_rates"
 			android:exported="false" />
+		<provider
+			android:name="android.support.v4.content.FileProvider"
+			android:authorities="com.hivewallet.androidclient.wallet_test.fileprovider"
+			android:grantUriPermissions="true"
+			android:exported="false">
+			<meta-data
+				android:name="android.support.FILE_PROVIDER_PATHS"
+				android:resource="@xml/filepaths" />
+		</provider>
 
 		<!--
 		<receiver

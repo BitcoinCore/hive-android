@@ -17,11 +17,9 @@
 
 package com.hivewallet.androidclient.wallet;
 
-import java.io.File;
 import java.nio.charset.Charset;
 
 import android.os.Build;
-import android.os.Environment;
 import android.text.format.DateUtils;
 
 import com.google.bitcoin.core.NetworkParameters;
@@ -141,4 +139,6 @@ public final class Constants
 	public static final String APP_PLATFORM_APP_FOLDER = "apps";
 	
 	public static final String PHOTO_ASSETS_FOLDER = "photo_assets";
+	
+	public static final String FILE_PROVIDER_AUTHORITY = R.class.getPackage().getName() + ".fileprovider"; 
 }

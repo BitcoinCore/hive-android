@@ -52,7 +52,6 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
@@ -64,7 +63,7 @@ import android.nfc.NfcAdapter;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.text.Html;
+import android.support.v4.content.FileProvider;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,14 +74,12 @@ import android.widget.TextView;
 
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
-import com.google.bitcoin.core.Address;
 import com.google.bitcoin.core.AddressFormatException;
 import com.google.bitcoin.core.ECKey;
 import com.google.bitcoin.core.Transaction;
 import com.google.bitcoin.core.VerificationException;
 import com.google.bitcoin.core.Wallet;
 import com.google.bitcoin.core.Wallet.BalanceType;
-import com.google.bitcoin.core.WrongNetworkException;
 import com.google.bitcoin.store.UnreadableWalletException;
 import com.google.bitcoin.store.WalletProtobufSerializer;
 
@@ -101,7 +98,6 @@ import com.hivewallet.androidclient.wallet.util.Io;
 import com.hivewallet.androidclient.wallet.util.Iso8601Format;
 import com.hivewallet.androidclient.wallet.util.Nfc;
 import com.hivewallet.androidclient.wallet.util.WalletUtils;
-import com.hivewallet.androidclient.wallet.util.WholeStringBuilder;
 import com.hivewallet.androidclient.wallet_test.R;
 
 /**
@@ -1079,13 +1075,23 @@ public final class WalletActivity extends AbstractWalletActivity
 
 	private boolean archiveWalletBackup(@Nonnull final File file)
 	{
+		Uri shareableUri = null;
+		try {
+			shareableUri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, file);
+		} catch (IllegalArgumentException e) {
+			throw new RuntimeException("Backup file cannot be shared", e);
+		}
+		
+		log.info("Shareable URI: {}", shareableUri);
+		
 		final Intent intent = new Intent(Intent.ACTION_SEND);
 		intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.export_keys_dialog_mail_subject));
 		intent.putExtra(Intent.EXTRA_TEXT,
 				getString(R.string.export_keys_dialog_mail_text) + "\n\n" + String.format(Constants.WEBMARKET_APP_URL, getPackageName()) + "\n\n"
 						+ Constants.SOURCE_URL + '\n');
 		intent.setType(Constants.MIMETYPE_WALLET_BACKUP);
-		intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+		intent.putExtra(Intent.EXTRA_STREAM, shareableUri);
+		intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
 		try
 		{

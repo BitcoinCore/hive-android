@@ -1,0 +1,6 @@
+<paths xmlns:android="http://schemas.android.com/apk/res/android" >
+
+	<files-path name="backups" path="backups/" />
+	<files-path name="backups-testnet" path="backups-testnet/" />
+
+</paths>
