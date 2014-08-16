@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,6 +45,7 @@ import java.util.TimeZone;
 
 import javax.annotation.Nonnull;
 
+import org.apache.commons.io.FileUtils;
 import org.bitcoinj.wallet.Protos;
 
 import android.app.Activity;
@@ -52,6 +54,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
@@ -117,7 +120,9 @@ public final class WalletActivity extends AbstractWalletActivity
 
 	private static final int REQUEST_CODE_SCAN = 0;
 	public static final int REQUEST_CODE_SCAN_ADD_CONTACT = 1;
+	private static final int REQUEST_PICK_BACKUP = 2;
 	private String addContactScanResult = null;
+	private Uri pickBackupResult = null;
 
 	@Override
 	protected void onCreate(final Bundle savedInstanceState)
@@ -154,6 +159,8 @@ public final class WalletActivity extends AbstractWalletActivity
 		super.onPostResume();
 
 		handleAddContactScan();
+		
+		handleImportKeysFollowup();
 	}
 
 	@Override
@@ -230,6 +237,11 @@ public final class WalletActivity extends AbstractWalletActivity
 		{
 			addContactScanResult = intent.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
 		}
+		
+		if (requestCode == REQUEST_PICK_BACKUP && resultCode == Activity.RESULT_OK)
+		{
+			pickBackupResult = intent.getData();
+		}
 	}
 
 	@Override
@@ -294,7 +306,7 @@ public final class WalletActivity extends AbstractWalletActivity
 				return true;
 
 			case R.id.wallet_options_import_keys:
-				showDialog(DIALOG_IMPORT_KEYS);
+				handleImportKeys();
 				return true;
 
 			case R.id.wallet_options_export_keys:
@@ -392,7 +404,45 @@ public final class WalletActivity extends AbstractWalletActivity
 				dialog(WalletActivity.this, null, R.string.address_book_options_scan_title, messageResId, messageArgs);
 			}
 		}.parse();		
-	}	
+	}
+	
+	private void handleImportKeys() {
+		try {
+			final Intent intent = new Intent(Intent.ACTION_PICK);
+			startActivityForResult(intent, REQUEST_PICK_BACKUP);
+		} catch (ActivityNotFoundException e) {
+			longToast(R.string.import_keys_dialog_no_external_source);
+		}
+	}
+	
+	private void handleImportKeysFollowup() {
+		if (pickBackupResult == null)
+			return;
+		Uri backupFile = pickBackupResult;
+		pickBackupResult = null;
+		
+		File localCopy = new File(getFilesDir(), Constants.Files.EXTERNAL_WALLET_TMP_FILE);
+		localCopy.delete();
+		
+		InputStream backupStream = null;
+		try
+		{
+			backupStream = getContentResolver().openInputStream(backupFile);
+			FileUtils.copyInputStreamToFile(backupStream, localCopy);
+			
+			showDialog(DIALOG_IMPORT_KEYS);
+		}
+		catch (FileNotFoundException ignored) { }
+		catch (IOException ignored) {}
+		finally {
+			if (backupStream != null) {
+				try { 
+					backupStream.close();
+				}
+				catch (IOException ignored) { }
+			}
+		}
+	}
 
 	@Override
 	protected Dialog onCreateDialog(final int id, final Bundle args)
@@ -439,7 +489,8 @@ public final class WalletActivity extends AbstractWalletActivity
 				passwordView.setText(null); // get rid of it asap
 
 				final boolean isProtobuf = file.getName().startsWith(Constants.Files.WALLET_KEY_BACKUP_PROTOBUF + '.')
-						|| file.getName().startsWith(Constants.Files.EXTERNAL_WALLET_BACKUP + '-');
+						|| file.getName().startsWith(Constants.Files.EXTERNAL_WALLET_BACKUP + '-')
+						|| file.getName().startsWith(Constants.Files.EXTERNAL_WALLET_TMP_FILE);
 
 				if (isProtobuf)
 					restoreWalletFromProtobuf(file, password);
@@ -471,7 +522,9 @@ public final class WalletActivity extends AbstractWalletActivity
 			{
 				final File file = getItem(position);
 				File externalWalletBackupDir = new File(getFilesDir(), Constants.Files.EXTERNAL_WALLET_BACKUP_DIR);
-				final boolean isExternal = externalWalletBackupDir.equals(file.getParentFile());
+				File selectedExternalWalletBackup = new File(getFilesDir(), Constants.Files.EXTERNAL_WALLET_TMP_FILE);
+				final boolean isExternal = selectedExternalWalletBackup.equals(file);
+				final boolean isManual = externalWalletBackupDir.equals(file.getParentFile());
 				final boolean isEncrypted = Crypto.OPENSSL_FILE_FILTER.accept(file);
 
 				if (row == null)
@@ -483,14 +536,22 @@ public final class WalletActivity extends AbstractWalletActivity
 				final TextView securityView = (TextView) row.findViewById(R.id.wallet_import_keys_file_row_security);
 				final String encryptedStr = context.getString(isEncrypted ? R.string.import_keys_dialog_file_security_encrypted
 						: R.string.import_keys_dialog_file_security_unencrypted);
-				final String storageStr = context.getString(R.string.import_keys_dialog_file_security_internal);
-				securityView.setText(encryptedStr + ", " + storageStr);
+				final String storageStr = isExternal ? "" : ", " + context.getString(R.string.import_keys_dialog_file_security_internal);
+				securityView.setText(encryptedStr + storageStr);
 
 				final TextView createdView = (TextView) row.findViewById(R.id.wallet_import_keys_file_row_created);
-				createdView
-						.setText(context.getString(isExternal ? R.string.import_keys_dialog_file_created_manual
-								: R.string.import_keys_dialog_file_created_automatic, DateUtils.getRelativeTimeSpanString(context,
-								file.lastModified(), true)));
+				if (isExternal) {
+					createdView
+						.setText(context.getString(R.string.import_keys_dialog_file_just_selected));
+				} else if (isManual) {
+					createdView
+						.setText(context.getString(R.string.import_keys_dialog_file_created_manual,
+								DateUtils.getRelativeTimeSpanString(context, file.lastModified(), true)));
+				} else {
+					createdView
+						.setText(context.getString(R.string.import_keys_dialog_file_created_automatic,
+								DateUtils.getRelativeTimeSpanString(context, file.lastModified(), true)));
+				}
 
 				return row;
 			}
@@ -506,6 +567,11 @@ public final class WalletActivity extends AbstractWalletActivity
 		final AlertDialog alertDialog = (AlertDialog) dialog;
 
 		final List<File> files = new LinkedList<File>();
+		
+		// result of ACTION_PICk
+		File selectedExternalWalletBackup = new File(getFilesDir(), Constants.Files.EXTERNAL_WALLET_TMP_FILE);
+		if (selectedExternalWalletBackup.exists())
+			files.add(selectedExternalWalletBackup);
 
 		// local copies of external backups
 		File externalWalletBackupDir = new File(getFilesDir(), Constants.Files.EXTERNAL_WALLET_BACKUP_DIR);

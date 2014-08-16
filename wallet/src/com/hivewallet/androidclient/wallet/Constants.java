@@ -49,6 +49,7 @@ public final class Constants
 		public static final String EXTERNAL_WALLET_BACKUP_DIR = "backups" + FILENAME_NETWORK_SUFFIX;
 		public static final String EXTERNAL_WALLET_KEY_BACKUP = "hive-android-wallet-keys" + FILENAME_NETWORK_SUFFIX;
 		public static final String EXTERNAL_WALLET_BACKUP = "hive-android-wallet-backup" + FILENAME_NETWORK_SUFFIX;
+		public static final String EXTERNAL_WALLET_TMP_FILE = "external-wallet-backup-source" + FILENAME_NETWORK_SUFFIX;
 
 		public static final String BLOCKCHAIN_FILENAME = "blockchain" + FILENAME_NETWORK_SUFFIX;
 
