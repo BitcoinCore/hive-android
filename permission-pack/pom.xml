@@ -6,7 +6,7 @@
 
 	<artifactId>permission-pack</artifactId>
 	<packaging>apk</packaging>
-	<version>0.1</version>
+	<version>0.2</version>
 	<name>Hive Permission Pack</name>
 
 	<parent>
