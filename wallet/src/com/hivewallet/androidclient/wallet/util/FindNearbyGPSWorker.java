@@ -132,7 +132,7 @@ public class FindNearbyGPSWorker extends Thread implements Callback
 			case LocationService.MSG_STATUS:
 				Bundle statusBundle = (Bundle)msg.obj;
 				
-				if (statusBundle.getBoolean(LocationService.KEY_IS_AVAILABLE, false)) {
+				if (!statusBundle.getBoolean(LocationService.KEY_IS_AVAILABLE, false)) {
 					String error = statusBundle.getString(LocationService.KEY_ERROR, "Error message unavailable");
 					log.warn("LocationService not available ({}) - GPS worker is shutting down.", error);
 				}
