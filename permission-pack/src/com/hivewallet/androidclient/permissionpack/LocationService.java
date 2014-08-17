@@ -51,12 +51,13 @@ public class LocationService extends Service implements Callback
 	}
 	
 	@Override
-	public void onDestroy()
+	public boolean onUnbind(Intent intent)
 	{
 		if (locationManager != null)
 			locationManager.removeUpdates(locationListener);
 		
-		super.onDestroy();
+		stopSelf();
+		return false;
 	}
 
 	@Override
