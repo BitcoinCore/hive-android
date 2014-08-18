@@ -1,1 +1,1 @@
-Hive - The home for your digital money.
+Hive Android is an open-source standalone Bitcoin wallet; no third party needed.
