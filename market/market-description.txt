@@ -14,7 +14,6 @@ Hive Android is an open-source standalone Bitcoin wallet. No external server or 
 • Hive app store offers close integration with the rest of the Bitcoin ecosystem. Apps available for LocalBitcoins.com, Bitstamp, piiko and others.
 • Works offline: Stores transactions for later sending or transmits them via Bluetooth
 • Amounts displayed in BTC, mBTC or µBTC with exchange rate information alongside
-• Add contacts based on your address book (information from your address book is solely used for the autocomplete feature - no address book data ever leaves your device)
 • Notifications for incoming payments
 • Encrypted backups
 
@@ -25,15 +24,7 @@ Hive Android is an open-source standalone Bitcoin wallet. No external server or 
 
 <b>App permissions</b>
 
-Hive takes your privacy very seriously. Below are explanations for why we request certain permissions.
-
-<u>Read & write access to external storage</u>: To give you the option of creating a backup of your wallet, we need to be able to write this backup to external storage and later restore it from there again.
-
-<u>Read contacts</u>: When entering the name of a new contact, Hive provides suggestions based on your address book. This is solely an auto-complete feature and no contact data ever leaves your device.
-
-<u>Read profile</u>: When using the "find nearby" feature, we set your photo and name based on what is stored on your device. Before broadcasting this profile, it is presented to you again and you are asked for additional confirmation.
-
-<u>Access location</u>: The "find nearby" feature uses both Bluetooth and GPS to find other Hive users. The later is used to be compatible with Hive Web where Bluetooth is not available. When using the "find nearby" feature you can select whether you would like to use both Bluetooth and GPS or just one of the two.
+The core app uses as few permissions as possible. Some features - like finding Hive users based on your location - are disabled as a result. You have the option of installing the app "Hive Permission Pack" to enable these features.
 
 <b>Further reading</b>
 
