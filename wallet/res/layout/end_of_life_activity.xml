@@ -1,0 +1,14 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent" >
+
+	<TextView
+		android:id="@+id/tv_end_of_life_message"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:drawablePadding="32dp"
+		android:drawableTop="@drawable/app_icon"
+		android:padding="32dp"
+		android:textSize="@dimen/font_size_normal" />
+
+</ScrollView>

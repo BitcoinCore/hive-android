@@ -30,6 +30,13 @@
 		android:id="@+id/f_contacts_and_history"
 		android:name="com.hivewallet.androidclient.wallet.ui.ContactsAndHistoryFragment"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent" />
+		android:layout_height="0dp"
+		android:layout_weight="1" />
+
+	<fragment
+		android:id="@+id/end_of_life_notice_fragment"
+		android:name="com.hivewallet.androidclient.wallet.ui.EndOfLifeNoticeFragment"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content" />
 
 </LinearLayout>

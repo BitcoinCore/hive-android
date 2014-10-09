@@ -315,4 +315,7 @@
 	<string name="find_nearby_user_photo_selection">Select photo</string>
 	<string name="find_nearby_default_user_name">Hive user</string>
 	<string name="find_nearby_permission_pack"><![CDATA[Hint: <u><font color=\"blue\">Hive Permission Pack</font></u><br/> enables additional features.]]></string>
+	<string name="end_of_life_notice"><![CDATA[Note: This version of Hive is no longer supported.<br/>Please upgrade to our <u>new line of wallets</u>!]]></string>
+	<string name="end_of_life_message"><![CDATA[To unify our products across all platforms, we are switching to a new architecture based on a single passphrase for your wallet (also called an HD wallet).<br/><br/>The new wallet is significantly different, which is why you are not upgraded automatically. But we invite you to give it a try, by downloading it from Google Play. Thanks for using Hive!<br/><br/><u>Get it on Google Play</u>]]></string>
+
 </resources>
